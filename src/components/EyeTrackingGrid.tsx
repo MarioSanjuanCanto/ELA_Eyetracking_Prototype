@@ -251,7 +251,7 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
               <span
                 className={cn(
                   "font-semibold transition-all duration-200 leading-snug",
-                  gridSize === 3 ? "text-base md:text-lg" : "font-mono text-base md:text-lg",
+                  gridSize === 3 ? "text-xl md:text-3xl" : "font-mono text-lg md:text-2xl",
                   isActive && "scale-105"
                 )}
               >
