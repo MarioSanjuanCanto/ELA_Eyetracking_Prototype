@@ -126,14 +126,14 @@ const Index = () => {
               <div className="text-[11px] text-[#9ca3af]">
                 {isTracking && currentCell
                   ? `Tracking cell (${currentCell.row + 1}, ${currentCell.col + 1})`
-                  : '1) Calibrate · 2) Start tracking · 3) Mira a un cuadrado'}
+                  : '1) Calibrate · 2) Start tracking · 3) Look to the squares'}
               </div>
             </div>
           </div>
 
-          {/* 3x3 grid */}
+          {/* 3x3 grid - slightly larger to use corner space */}
           <div className="flex items-center justify-center">
-            <div className="w-full max-w-4xl aspect-square">
+            <div className="w-full max-w-5xl aspect-square">
               <EyeTrackingGrid
                 gridSize={3}
                 isTracking={isTracking}

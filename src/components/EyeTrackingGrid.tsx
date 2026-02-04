@@ -224,7 +224,7 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
 
       {/* Cuadrícula */}
       <div
-        className="w-full h-full grid gap-6 p-8"
+        className="w-full h-full grid gap-5 p-6 md:gap-7 md:p-8"
         style={{
           gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
           gridTemplateRows: `repeat(${gridSize}, 1fr)`,
