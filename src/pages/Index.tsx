@@ -51,7 +51,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#d9dde3] flex flex-col items-center justify-center px-6 py-6">
+    <div className="h-screen w-screen bg-[#d9dde3] flex flex-col items-center justify-center p-4">
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
@@ -79,23 +79,24 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <div className="w-full max-w-5xl">
+      <div className="w-full max-w-6xl h-full max-h-full flex flex-col">
         {/* Big white card like the mockup */}
-        <div className="bg-white rounded-[32px] shadow-xl px-10 py-10 flex flex-col gap-8">
+        <div className="bg-white rounded-[32px] shadow-xl p-4 md:p-6 lg:p-8 flex flex-col gap-6 h-full border border-white/50">
           {/* Top row: text bar + controls on the right */}
-          <div className="w-full flex items-center gap-4">
-            <div className="flex-1">
-              <div className="w-full h-16 rounded-full bg-[#f3f4f6] border border-[#e5e7eb] flex items-center px-10 text-xl text-[#9ca3af]">
+          <div className="w-full flex flex-col md:flex-row items-start md:items-center gap-4 shrink-0">
+            <div className="flex-1 w-full">
+              <div className="w-full h-14 md:h-16 rounded-full bg-[#f3f4f6] border border-[#e5e7eb] flex items-center px-6 md:px-10 text-lg md:text-xl text-[#9ca3af] truncate">
                 Hola buenos día...
               </div>
             </div>
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex flex-row md:flex-col w-full md:w-auto items-center md:items-end justify-between md:justify-center gap-2">
               <div className="flex gap-2">
                 <Button
                   onClick={handleStartCalibration}
                   className="justify-center gap-2 bg-white border border-[#d1d5db] text-[#111827] hover:bg-[#f3f4f6]"
                   variant="outline"
                   disabled={isTracking}
+                  size="sm"
                 >
                   <Settings className="w-4 h-4 text-[#6b7280]" />
                   <span className="text-sm font-medium">
@@ -109,6 +110,7 @@ const Index = () => {
                     : 'bg-[#3b82f6] hover:bg-[#2563eb] text-white'
                     }`}
                   disabled={!isCalibrated}
+                  size="sm"
                 >
                   {isTracking ? (
                     <>
@@ -123,17 +125,17 @@ const Index = () => {
                   )}
                 </Button>
               </div>
-              <div className="text-[11px] text-[#9ca3af]">
+              <div className="text-[10px] md:text-[11px] text-[#9ca3af] whitespace-nowrap hidden sm:block">
                 {isTracking && currentCell
                   ? `Tracking cell (${currentCell.row + 1}, ${currentCell.col + 1})`
-                  : '1) Calibrate · 2) Start tracking · 3) Look to the squares'}
+                  : '1) Calibrate · 2) Start tracking'}
               </div>
             </div>
           </div>
 
-          {/* 3x3 grid - slightly larger to use corner space */}
-          <div className="flex items-center justify-center">
-            <div className="w-full max-w-5xl aspect-square">
+          {/* Grid Container - Resizes to fit remaining space while keeping aspect ratio */}
+          <div className="flex-1 min-h-0 w-full flex items-center justify-center relative overflow-hidden">
+            <div className="aspect-square h-full max-h-full max-w-full w-auto shadow-sm rounded-[32px] overflow-hidden">
               <EyeTrackingGrid
                 gridSize={3}
                 isTracking={isTracking}
