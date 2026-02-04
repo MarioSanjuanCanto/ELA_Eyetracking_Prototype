@@ -93,18 +93,20 @@ const Index = () => {
               <div className="flex gap-2">
                 <Button
                   onClick={handleStartCalibration}
+                  className="justify-center gap-2 bg-white border border-[#d1d5db] text-[#111827] hover:bg-[#f3f4f6]"
                   variant="outline"
-                  className="justify-center gap-2 border-[#d1d5db] text-[#111827]"
                   disabled={isTracking}
                 >
-                  <Settings className="w-4 h-4" />
-                  {isCalibrated ? 'Recalibrate' : 'Calibrate'}
+                  <Settings className="w-4 h-4 text-[#6b7280]" />
+                  <span className="text-sm font-medium">
+                    {isCalibrated ? 'Recalibrate' : 'Calibrate'}
+                  </span>
                 </Button>
                 <Button
                   onClick={isTracking ? stopTracking : startTracking}
                   className={`justify-center gap-2 ${isTracking
-                      ? 'bg-[#ef4444] hover:bg-[#dc2626] text-white'
-                      : 'bg-[#3b82f6] hover:bg-[#2563eb] text-white'
+                    ? 'bg-[#ef4444] hover:bg-[#dc2626] text-white'
+                    : 'bg-[#3b82f6] hover:bg-[#2563eb] text-white'
                     }`}
                   disabled={!isCalibrated}
                 >
