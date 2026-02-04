@@ -1,13 +1,11 @@
 import { useState, useCallback } from 'react';
 import EyeTrackingGrid from '@/components/EyeTrackingGrid';
-import ControlPanel from '@/components/ControlPanel';
 import CalibrationOverlay from '@/components/CalibrationOverlay';
 import { useWebGazer } from '@/hooks/useWebGazer';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { AlertCircle, Loader2, Settings, Activity, EyeOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  const [gridSize, setGridSize] = useState(4);
   const [currentCell, setCurrentCell] = useState<{ row: number; col: number } | null>(null);
   const [showCalibration, setShowCalibration] = useState(false);
 
@@ -53,7 +51,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
@@ -103,17 +101,10 @@ const Index = () => {
         </header>
 
         {/* Grid Area */}
-        <main className="flex-1 p-6">
-          <div
-            className={cn(
-              "w-full h-full rounded-2xl border-2 transition-all duration-300",
-              isTracking
-                ? "border-primary/30 bg-card/50"
-                : "border-border bg-card/30"
-            )}
-          >
+        <main className="flex-1 p-6 flex items-center justify-center">
+          <div className="w-full max-w-3xl aspect-square rounded-2xl border-2 border-border bg-card/30 transition-all duration-300 overflow-hidden">
             <EyeTrackingGrid
-              gridSize={gridSize}
+              gridSize={3}
               isTracking={isTracking}
               onCellChange={handleCellChange}
             />
@@ -121,40 +112,54 @@ const Index = () => {
         </main>
       </div>
 
-      {/* Sidebar */}
-      <aside className="w-80 border-l border-border p-6 flex flex-col">
-        <ControlPanel
-          isTracking={isTracking}
-          isCalibrated={isCalibrated}
-          gridSize={gridSize}
-          currentCell={isTracking ? currentCell : null}
-          onStartTracking={startTracking}
-          onStopTracking={stopTracking}
-          onCalibrate={handleStartCalibration}
-          onGridSizeChange={setGridSize}
-        />
-
-        {/* Instructions */}
-        <div className="mt-auto pt-6">
-          <div className="glass-panel rounded-xl p-4 space-y-3">
-            <h3 className="text-sm font-medium text-foreground">Quick Start</h3>
-            <ol className="text-xs text-muted-foreground space-y-2">
-              <li className="flex gap-2">
-                <span className="text-primary font-mono">1.</span>
-                Click "Start Calibration" and follow the dots
-              </li>
-              <li className="flex gap-2">
-                <span className="text-primary font-mono">2.</span>
-                Click each dot 5 times while looking at it
-              </li>
-              <li className="flex gap-2">
-                <span className="text-primary font-mono">3.</span>
-                Start tracking to see which zone you're looking at
-              </li>
-            </ol>
-          </div>
+      {/* Bottom controls */}
+      <div className="w-full border-t border-border bg-background/95 backdrop-blur px-6 py-4 flex flex-col items-center gap-3">
+        <div className="text-xs text-muted-foreground text-center">
+          {isTracking && currentCell ? (
+            <>
+              Tracking cell{' '}
+              <span className="font-mono font-semibold text-primary">
+                {`(${currentCell.row + 1}, ${currentCell.col + 1})`}
+              </span>
+            </>
+          ) : (
+            <>1) Calibrate · 2) Start tracking · 3) Look at a square</>
+          )}
         </div>
-      </aside>
+
+        <div className="flex gap-3">
+          <Button
+            onClick={handleStartCalibration}
+            variant="secondary"
+            className="justify-center gap-2"
+            disabled={isTracking}
+          >
+            <Settings className="w-4 h-4" />
+            {isCalibrated ? 'Recalibrate' : 'Start calibration'}
+          </Button>
+
+          <Button
+            onClick={isTracking ? stopTracking : startTracking}
+            className={`justify-center gap-2 ${isTracking
+                ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
+                : ''
+              }`}
+            disabled={!isCalibrated}
+          >
+            {isTracking ? (
+              <>
+                <EyeOff className="w-4 h-4" />
+                Stop tracking
+              </>
+            ) : (
+              <>
+                <Activity className="w-4 h-4" />
+                Start tracking
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
