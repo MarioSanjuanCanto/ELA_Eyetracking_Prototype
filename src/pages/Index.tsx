@@ -79,9 +79,9 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <div className="w-full max-w-6xl h-full max-h-full flex flex-col">
+      <div className="w-full max-w-[98%] h-full max-h-full flex flex-col">
         {/* Big white card like the mockup */}
-        <div className="bg-white rounded-[32px] shadow-xl p-4 md:p-6 lg:p-8 flex flex-col gap-6 h-full border border-white/50">
+        <div className="bg-white rounded-[32px] shadow-xl p-2 md:p-4 flex flex-col gap-4 h-full border border-white/50">
           {/* Top row: text bar + controls on the right */}
           <div className="w-full flex flex-col md:flex-row items-start md:items-center gap-4 shrink-0">
             <div className="flex-1 w-full">
@@ -133,9 +133,9 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Grid Container - Resizes to fit remaining space while keeping aspect ratio */}
-          <div className="flex-1 min-h-0 w-full flex items-center justify-center relative overflow-hidden">
-            <div className="aspect-square h-full max-h-full max-w-full w-auto shadow-sm rounded-[32px] overflow-hidden">
+          {/* Grid Container */}
+          <div className="flex-1 min-h-0 w-full flex items-center justify-center relative overflow-hidden py-4">
+            <div className="w-full h-full shadow-sm rounded-[32px] overflow-hidden">
               <EyeTrackingGrid
                 gridSize={3}
                 isTracking={isTracking}
