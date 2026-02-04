@@ -21,7 +21,8 @@ const CALIBRATION_POINTS = [
 const CalibrationOverlay = ({ onComplete, onCancel }: CalibrationOverlayProps) => {
   const [currentPoint, setCurrentPoint] = useState(0);
   const [clicks, setClicks] = useState(0);
-  const requiredClicks = 5;
+  // More clicks per point → better WebGazer model with tiny code change
+  const requiredClicks = 10;
 
   const handlePointClick = useCallback(() => {
     const newClicks = clicks + 1;

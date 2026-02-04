@@ -7,7 +7,9 @@ interface EyeTrackingGridProps {
   onCellChange?: (row: number, col: number) => void;
 }
 
-const GAZE_BUFFER_SIZE = 15;
+// More samples → smoother, more stable gaze
+const GAZE_BUFFER_SIZE = 25;
+const STABLE_FRAMES = 5;
 
 type Cell = { row: number; col: number };
 
@@ -18,6 +20,8 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
   const gazeBufferRef = useRef<{ x: number; y: number }[]>([]);
   const activeCellRef = useRef<Cell | null>(null);
   const gazePointRef = useRef<{ x: number; y: number } | null>(null);
+  const pendingCellRef = useRef<Cell | null>(null);
+  const pendingCountRef = useRef(0);
 
   const commitActiveCell = useCallback(
     (cell: Cell | null) => {
@@ -43,7 +47,7 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
     }
 
     // Filtro exponencial simple (low-pass)
-    const alpha = 0.25; // cuanto más pequeño, más estable pero más lento
+    const alpha = 0.18; // más pequeño → más estable pero más lento
     const x = prev.x + alpha * (normalizedX - prev.x);
     const y = prev.y + alpha * (normalizedY - prev.y);
 
@@ -59,6 +63,8 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
       setGazePoint(null);
       gazePointRef.current = null;
       gazeBufferRef.current = [];
+      pendingCellRef.current = null;
+      pendingCountRef.current = 0;
       return;
     }
 
@@ -111,21 +117,55 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
         }
       }
 
-      // Solo actualizamos si realmente cambia de celda
       const current = activeCellRef.current;
-      if (
-        !current ||
-        !bestCell ||
-        current.row !== bestCell.row ||
-        current.col !== bestCell.col
-      ) {
+
+      // Si aún no hay celda activa, activamos directamente la mejor
+      if (!current && bestCell) {
         commitActiveCell(bestCell);
+        pendingCellRef.current = null;
+        pendingCountRef.current = 0;
+        return;
+      }
+
+      // Si seguimos en la misma celda, reseteamos candidato
+      if (
+        current &&
+        bestCell &&
+        current.row === bestCell.row &&
+        current.col === bestCell.col
+      ) {
+        pendingCellRef.current = null;
+        pendingCountRef.current = 0;
+        return;
+      }
+
+      // Histéresis: exigimos varios frames consecutivos antes de cambiar de celda
+      if (bestCell) {
+        const pending = pendingCellRef.current;
+        if (
+          pending &&
+          pending.row === bestCell.row &&
+          pending.col === bestCell.col
+        ) {
+          pendingCountRef.current += 1;
+        } else {
+          pendingCellRef.current = bestCell;
+          pendingCountRef.current = 1;
+        }
+
+        if (pendingCountRef.current >= STABLE_FRAMES) {
+          commitActiveCell(bestCell);
+          pendingCellRef.current = null;
+          pendingCountRef.current = 0;
+        }
       }
     } else {
       // Si el usuario mira fuera de la cuadrícula, limpiamos la celda activa
       // pero dejamos el último punto de mirada dibujado.
       setActiveCell(null);
       activeCellRef.current = null;
+      pendingCellRef.current = null;
+      pendingCountRef.current = 0;
     }
   }, [gridSize, isTracking, commitActiveCell, commitGazePoint]);
 
