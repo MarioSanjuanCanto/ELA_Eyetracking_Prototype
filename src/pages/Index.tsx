@@ -51,7 +51,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-[#d9dde3] flex flex-col items-center justify-center px-6 py-6">
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
@@ -79,85 +79,67 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 border-b border-border flex items-center px-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">GE</span>
+      <div className="w-full max-w-5xl">
+        {/* Big white card like the mockup */}
+        <div className="bg-white rounded-[32px] shadow-xl px-10 py-10 flex flex-col gap-8">
+          {/* Top row: text bar + controls on the right */}
+          <div className="w-full flex items-center gap-4">
+            <div className="flex-1">
+              <div className="w-full h-16 rounded-full bg-[#f3f4f6] border border-[#e5e7eb] flex items-center px-10 text-xl text-[#9ca3af]">
+                Hola buenos día...
+              </div>
             </div>
-            <div>
-              <h1 className="font-semibold text-foreground">GridEye</h1>
-              <p className="text-xs text-muted-foreground">Zone-Based Eye Tracking</p>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleStartCalibration}
+                  variant="outline"
+                  className="justify-center gap-2 border-[#d1d5db] text-[#111827]"
+                  disabled={isTracking}
+                >
+                  <Settings className="w-4 h-4" />
+                  {isCalibrated ? 'Recalibrate' : 'Calibrate'}
+                </Button>
+                <Button
+                  onClick={isTracking ? stopTracking : startTracking}
+                  className={`justify-center gap-2 ${isTracking
+                      ? 'bg-[#ef4444] hover:bg-[#dc2626] text-white'
+                      : 'bg-[#3b82f6] hover:bg-[#2563eb] text-white'
+                    }`}
+                  disabled={!isCalibrated}
+                >
+                  {isTracking ? (
+                    <>
+                      <EyeOff className="w-4 h-4" />
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <Activity className="w-4 h-4" />
+                      Start
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="text-[11px] text-[#9ca3af]">
+                {isTracking && currentCell
+                  ? `Tracking cell (${currentCell.row + 1}, ${currentCell.col + 1})`
+                  : '1) Calibrate · 2) Start tracking · 3) Mira a un cuadrado'}
+              </div>
             </div>
           </div>
 
-          {isTracking && (
-            <div className="ml-auto flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm text-primary font-medium">Live</span>
+          {/* 3x3 grid */}
+          <div className="flex items-center justify-center">
+            <div className="w-full max-w-4xl aspect-square">
+              <EyeTrackingGrid
+                gridSize={3}
+                isTracking={isTracking}
+                onCellChange={handleCellChange}
+              />
             </div>
-          )}
-        </header>
-
-        {/* Grid Area */}
-        <main className="flex-1 p-6 flex items-center justify-center">
-          <div className="w-full max-w-3xl aspect-square rounded-2xl border-2 border-border bg-card/30 transition-all duration-300 overflow-hidden">
-            <EyeTrackingGrid
-              gridSize={3}
-              isTracking={isTracking}
-              onCellChange={handleCellChange}
-            />
           </div>
-        </main>
-      </div>
 
-      {/* Bottom controls */}
-      <div className="w-full border-t border-border bg-background/95 backdrop-blur px-6 py-4 flex flex-col items-center gap-3">
-        <div className="text-xs text-muted-foreground text-center">
-          {isTracking && currentCell ? (
-            <>
-              Tracking cell{' '}
-              <span className="font-mono font-semibold text-primary">
-                {`(${currentCell.row + 1}, ${currentCell.col + 1})`}
-              </span>
-            </>
-          ) : (
-            <>1) Calibrate · 2) Start tracking · 3) Look at a square</>
-          )}
-        </div>
-
-        <div className="flex gap-3">
-          <Button
-            onClick={handleStartCalibration}
-            variant="secondary"
-            className="justify-center gap-2"
-            disabled={isTracking}
-          >
-            <Settings className="w-4 h-4" />
-            {isCalibrated ? 'Recalibrate' : 'Start calibration'}
-          </Button>
-
-          <Button
-            onClick={isTracking ? stopTracking : startTracking}
-            className={`justify-center gap-2 ${isTracking
-                ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
-                : ''
-              }`}
-            disabled={!isCalibrated}
-          >
-            {isTracking ? (
-              <>
-                <EyeOff className="w-4 h-4" />
-                Stop tracking
-              </>
-            ) : (
-              <>
-                <Activity className="w-4 h-4" />
-                Start tracking
-              </>
-            )}
-          </Button>
         </div>
       </div>
     </div>

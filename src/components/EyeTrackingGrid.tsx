@@ -153,6 +153,16 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
   }, [isTracking, handleGazeUpdate]);
 
   const getCellLabel = (row: number, col: number) => {
+    // Para una cuadrícula 3x3 usamos las etiquetas de la imagen
+    if (gridSize === 3) {
+      const labels = [
+        ['Saludos', 'Despedidas', 'Frases Importantes'],
+        ['Preguntas', '[Salir]', 'Control del entorno'],
+        ['Frases sociales básicas', 'Necesidades', 'Emergencias'],
+      ];
+      return labels[row][col];
+    }
+
     const letter = String.fromCharCode(65 + col);
     return `${letter}${row + 1}`;
   };
@@ -174,7 +184,7 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
 
       {/* Cuadrícula */}
       <div
-        className="w-full h-full grid gap-4 md:gap-6 p-4 md:p-6"
+        className="w-full h-full grid gap-6 p-8"
         style={{
           gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
           gridTemplateRows: `repeat(${gridSize}, 1fr)`,
@@ -184,26 +194,28 @@ const EyeTrackingGrid = ({ gridSize, isTracking, onCellChange }: EyeTrackingGrid
           const row = Math.floor(index / gridSize);
           const col = index % gridSize;
           const isActive = activeCell?.row === row && activeCell?.col === col;
+          const label = getCellLabel(row, col);
+          const isEmergency = label === 'Emergencias';
 
           return (
             <div
               key={`${row}-${col}`}
               className={cn(
-                "rounded-2xl border-2 flex items-center justify-center transition-all duration-200 ease-out",
-                isActive
-                  ? "grid-cell-active animate-pulse-glow"
-                  : "grid-cell-inactive hover:border-muted-foreground/30"
+                "rounded-[26px] flex items-center justify-center text-center px-4 transition-all duration-200 ease-out select-none",
+                isEmergency
+                  ? "bg-[#ff5b5b] text-white"
+                  : "bg-[#c9d4ff] text-[#111827]",
+                isActive && "ring-4 ring-[#4f8cff] scale-[1.03] shadow-lg"
               )}
             >
               <span
                 className={cn(
-                  "font-mono text-base md:text-lg font-medium transition-all duration-200",
-                  isActive
-                    ? "text-primary glow-text scale-110"
-                    : "text-muted-foreground/50"
+                  "font-semibold transition-all duration-200 leading-snug",
+                  gridSize === 3 ? "text-base md:text-lg" : "font-mono text-base md:text-lg",
+                  isActive && "scale-105"
                 )}
               >
-                {getCellLabel(row, col)}
+                {label}
               </span>
             </div>
           );
