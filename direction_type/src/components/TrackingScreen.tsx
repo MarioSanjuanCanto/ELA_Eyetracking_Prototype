@@ -1,11 +1,13 @@
 import { GazeGrid } from "./GazeGrid";
 import { Button } from "@/components/ui/button";
-import { Settings, Activity, Play, Pause } from "lucide-react";
-import { GazeZone } from "@/hooks/useWebGazer";
+import { Settings, Activity, Pause } from "lucide-react";
+import { GazeZone, HeadPosition } from "@/hooks/useWebGazer";
+import { cn } from "@/lib/utils";
 
 interface TrackingScreenProps {
   gazeZone: GazeZone | null;
   isTracking: boolean;
+  headPosition: HeadPosition | null;
   onRecalibrate: () => void;
   onTogglePause: () => void;
 }
@@ -13,9 +15,17 @@ interface TrackingScreenProps {
 export const TrackingScreen = ({
   gazeZone,
   isTracking,
+  headPosition,
   onRecalibrate,
   onTogglePause,
 }: TrackingScreenProps) => {
+  console.log("Rendering TrackingScreen, HeadPosition:", headPosition);
+  // Movement thresholds for visual feedback
+  const offset = headPosition?.offset || { x: 0, y: 0 };
+  const distance = Math.sqrt(offset.x ** 2 + offset.y ** 2);
+  const isMisaligned = distance > 50;
+  const isCriticallyMisaligned = distance > 100;
+
   return (
     <div className="h-screen w-screen bg-[#F1F5F9] flex flex-col p-4 md:p-6 gap-4">
       {/* Top Bar */}
@@ -58,11 +68,6 @@ export const TrackingScreen = ({
       {/* Main Grid Area */}
       <div className="flex-1 w-full bg-white rounded-3xl shadow-sm p-4 md:p-6 overflow-hidden">
         <GazeGrid activeZone={gazeZone} />
-      </div>
-
-      {/* Status Footer - Keeping it subtle/hidden if not needed but useful for debugging/feedback */}
-      <div className="hidden">
-        {isTracking ? "Tracking Active" : "Tracking Paused"}
       </div>
     </div>
   );

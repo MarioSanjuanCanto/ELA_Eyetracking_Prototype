@@ -12,11 +12,13 @@ const Index = () => {
     isLoading,
     isTracking,
     gazeZone,
+    headPosition,
     initialize,
     stop,
     pause,
     resume,
     recordClick,
+    setFaceAnchor,
   } = useWebGazer();
 
   const handleStart = useCallback(async () => {
@@ -25,6 +27,7 @@ const Index = () => {
   }, [initialize]);
 
   const handleCalibrationComplete = useCallback(() => {
+    console.log("Calibration complete, switching to tracking...");
     setAppState("tracking");
   }, []);
 
@@ -50,6 +53,7 @@ const Index = () => {
       <CalibrationScreen
         onComplete={handleCalibrationComplete}
         onRecordClick={recordClick}
+        setFaceAnchor={setFaceAnchor}
         isLoading={isLoading}
       />
     );
@@ -59,6 +63,7 @@ const Index = () => {
     <TrackingScreen
       gazeZone={gazeZone}
       isTracking={isTracking}
+      headPosition={headPosition}
       onRecalibrate={handleRecalibrate}
       onTogglePause={handleTogglePause}
     />

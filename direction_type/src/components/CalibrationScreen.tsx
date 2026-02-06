@@ -6,6 +6,7 @@ import { Eye, Loader2 } from "lucide-react";
 interface CalibrationScreenProps {
   onComplete: () => void;
   onRecordClick: (x: number, y: number) => void;
+  setFaceAnchor: () => void;
   isLoading: boolean;
 }
 
@@ -24,6 +25,7 @@ const calibrationPoints = [
 export const CalibrationScreen = ({
   onComplete,
   onRecordClick,
+  setFaceAnchor,
   isLoading,
 }: CalibrationScreenProps) => {
   const [clickedPoints, setClickedPoints] = useState<number[]>([]);
@@ -38,12 +40,19 @@ export const CalibrationScreen = ({
       setClickedPoints((prev) => [...prev, index]);
 
       if (index === calibrationPoints.length - 1) {
-        setTimeout(onComplete, 500);
+        try {
+          setFaceAnchor();
+        } catch (e) {
+          console.warn("Failed to set face anchor, transitioning anyway:", e);
+        }
+        console.log("LAST POINT CLICKED: Triggering onComplete...");
+        // Minor delay to let the click registration finish
+        setTimeout(onComplete, 200);
       } else {
         setCurrentPoint(index + 1);
       }
     },
-    [onComplete, onRecordClick]
+    [onComplete, onRecordClick, setFaceAnchor]
   );
 
   const progress = (clickedPoints.length / calibrationPoints.length) * 100;
