@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface GazeGridProps {
   activeZone: { row: string; col: string } | null;
+  onExit?: () => void;
 }
 
 const mainGrid = [
@@ -14,11 +15,11 @@ const mainGrid = [
   ],
   [
     { label: "Preguntas", type: "default" },
-    { label: "TECLADO", type: "action" }, // New action button
+    { label: "[SALIR]", type: "action" }, // Center for easy exit
     { label: "Control del entorno", type: "default" },
   ],
   [
-    { label: "Frases sociales básicas", type: "default" },
+    { label: "TECLADO", type: "default" }, // Matches style of category buttons
     { label: "Necesidades", type: "default" },
     { label: "Emergencias", type: "danger" },
   ],
@@ -32,13 +33,13 @@ const keyboardGrid = [
   ],
   [
     { label: "JKL", type: "default" },
+    { label: "[ATRÁS]", type: "action" }, // Center for easy return
     { label: "MNO", type: "default" },
-    { label: "PQR", type: "default" },
   ],
   [
+    { label: "PQR", type: "default" },
     { label: "STU", type: "default" },
     { label: "VWXYZ", type: "default" },
-    { label: "[ATRÁS]", type: "action" }, // Back button
   ],
 ];
 
@@ -185,7 +186,7 @@ const DwellButton = ({
   );
 };
 
-export const GazeGrid = ({ activeZone }: GazeGridProps) => {
+export const GazeGrid = ({ activeZone, onExit }: GazeGridProps) => {
   const [currentGridType, setCurrentGridType] = useState<"main" | "keyboard">("main");
   const { toast } = useToast();
 
@@ -196,6 +197,9 @@ export const GazeGrid = ({ activeZone }: GazeGridProps) => {
     } else if (label === "[ATRÁS]") {
       setCurrentGridType("main");
       toast({ title: "Frases", description: "Volviendo al menú principal" });
+    } else if (label === "[SALIR]") {
+      if (onExit) onExit();
+      toast({ title: "Saliendo", description: "Volviendo a la pantalla de inicio" });
     } else {
       toast({
         title: "Seleccionado",
