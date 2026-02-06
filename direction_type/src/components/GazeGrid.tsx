@@ -136,6 +136,7 @@ const DwellButton = ({
   return (
     <div
       id={`btn-${label.replace(/[^a-zA-Z0-9]/g, '-')}`}
+      onClick={handleAction}
       className={cn(
         "relative rounded-2xl transition-all duration-300 flex items-center justify-center p-4 text-center cursor-pointer shadow-sm hover:shadow-md h-full w-full",
         "text-base md:text-lg lg:text-xl font-bold tracking-tight select-none border-2 border-transparent",
