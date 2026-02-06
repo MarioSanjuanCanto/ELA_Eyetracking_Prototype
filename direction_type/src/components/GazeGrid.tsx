@@ -35,7 +35,7 @@ const DwellButton = ({
 }) => {
   const { toast } = useToast();
   const [progress, setProgress] = useState(0);
-  const dwellTime = 5000; // 5 seconds
+  const dwellTime = 3000; // 3 seconds
   const gracePeriod = 400; // ms of "mercy" before reset
   const startTimeRef = useRef<number | null>(null);
   const lastActiveTimeRef = useRef<number>(Date.now());
@@ -162,15 +162,6 @@ const DwellButton = ({
               }}
               strokeLinecap="round"
             />
-            {/* The little dot like in the photo */}
-            {progress < 100 && (
-              <circle
-                cx={50 + radius * Math.cos((progress / 100) * 2 * Math.PI - Math.PI / 2)}
-                cy={50 + radius * Math.sin((progress / 100) * 2 * Math.PI - Math.PI / 2)}
-                r="1.5"
-                fill="currentColor"
-              />
-            )}
           </svg>
         </div>
       )}
