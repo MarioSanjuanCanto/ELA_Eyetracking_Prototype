@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { phrases, CATEGORY_MAP } from "@/lib/phrases";
 
 interface GazeGridProps {
   activeZone: { row: string; col: string } | null;
@@ -15,17 +16,17 @@ const mainGrid = [
   ],
   [
     { label: "Preguntas", type: "default" },
-    { label: "[SALIR]", type: "action" }, // Center for easy exit
+    { label: "[SALIR]", type: "action" },
     { label: "Control del entorno", type: "default" },
   ],
   [
-    { label: "TECLADO", type: "default" }, // Matches style of category buttons
+    { label: "TECLADO", type: "default" },
     { label: "Necesidades", type: "default" },
     { label: "Emergencias", type: "danger" },
   ],
 ];
 
-const keyboardGrid = [
+const keyboardGridCells = [
   [
     { label: "ABC", type: "default" },
     { label: "DEF", type: "default" },
@@ -33,7 +34,7 @@ const keyboardGrid = [
   ],
   [
     { label: "JKL", type: "default" },
-    { label: "[ATRÁS]", type: "action" }, // Center for easy return
+    { label: "[ATRÁS]", type: "action" },
     { label: "MNO", type: "default" },
   ],
   [
@@ -56,7 +57,7 @@ const DwellButton = ({
 }) => {
   const { toast } = useToast();
   const [progress, setProgress] = useState(0);
-  const dwellTime = 2500; // slightly faster for letters
+  const dwellTime = 2500;
   const gracePeriod = 400;
   const startTimeRef = useRef<number | null>(null);
   const lastActiveTimeRef = useRef<number>(Date.now());
@@ -188,29 +189,68 @@ const DwellButton = ({
 };
 
 export const GazeGrid = ({ activeZone, onExit }: GazeGridProps) => {
-  const [currentGridType, setCurrentGridType] = useState<"main" | "keyboard">("main");
+  const [viewState, setViewState] = useState<"main" | "keyboard" | "category">("main");
+  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleAction = (label: string) => {
-    if (label === "TECLADO") {
-      setCurrentGridType("keyboard");
-      toast({ title: "Modo Teclado", description: "Cambiando a rejilla de letras" });
-    } else if (label === "[ATRÁS]") {
-      setCurrentGridType("main");
-      toast({ title: "Frases", description: "Volviendo al menú principal" });
-    } else if (label === "[SALIR]") {
+    if (label === "[SALIR]") {
       if (onExit) onExit();
-      toast({ title: "Saliendo", description: "Volviendo a la pantalla de inicio" });
-    } else {
+      return;
+    }
+
+    if (label === "[ATRÁS]") {
+      setViewState("main");
+      setCurrentCategory(null);
+      return;
+    }
+
+    if (viewState === "main") {
+      if (label === "TECLADO") {
+        setViewState("keyboard");
+      } else if (CATEGORY_MAP[label]) {
+        setViewState("category");
+        setCurrentCategory(label);
+      }
+    } else if (viewState === "category" || viewState === "keyboard") {
       toast({
-        title: "Seleccionado",
+        title: "Activado",
         description: label,
         className: "bg-primary text-white font-bold",
       });
     }
   };
 
-  const currentItems = currentGridType === "main" ? mainGrid : keyboardGrid;
+  const getGridItems = () => {
+    if (viewState === "main") return mainGrid;
+    if (viewState === "keyboard") return keyboardGridCells;
+
+    // Create 3x3 grid for category phrases
+    if (viewState === "category" && currentCategory) {
+      const key = CATEGORY_MAP[currentCategory];
+      const categoryPhrases = phrases[key] || [];
+      const items: { label: string; type: string }[][] = [[], [], []];
+
+      // We have 8 slots (center is back)
+      let phraseIdx = 0;
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          if (r === 1 && c === 1) {
+            items[r][c] = { label: "[ATRÁS]", type: "action" };
+          } else {
+            const phrase = categoryPhrases[phraseIdx] || "-";
+            items[r][c] = { label: phrase, type: "default" };
+            phraseIdx++;
+          }
+        }
+      }
+      return items;
+    }
+
+    return mainGrid;
+  };
+
+  const gridItems = getGridItems();
 
   const isActive = (row: number, col: number) => {
     if (!activeZone) return false;
@@ -227,10 +267,10 @@ export const GazeGrid = ({ activeZone, onExit }: GazeGridProps) => {
 
   return (
     <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full h-full">
-      {currentItems.map((row, rowIndex) =>
+      {gridItems.map((row, rowIndex) =>
         row.map((item, colIndex) => (
           <DwellButton
-            key={`${currentGridType}-${rowIndex}-${colIndex}`}
+            key={`${viewState}-${currentCategory}-${rowIndex}-${colIndex}`}
             label={item.label}
             type={item.type}
             active={isActive(rowIndex, colIndex)}
