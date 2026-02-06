@@ -6,6 +6,7 @@ import { phrases, CATEGORY_MAP } from "@/lib/phrases";
 interface GazeGridProps {
   activeZone: { row: string; col: string } | null;
   onExit?: () => void;
+  onSelectText?: (text: string) => void;
 }
 
 const mainGrid = [
@@ -188,7 +189,7 @@ const DwellButton = ({
   );
 };
 
-export const GazeGrid = ({ activeZone, onExit }: GazeGridProps) => {
+export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) => {
   const [viewState, setViewState] = useState<"main" | "keyboard" | "category">("main");
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const { toast } = useToast();
@@ -203,6 +204,11 @@ export const GazeGrid = ({ activeZone, onExit }: GazeGridProps) => {
       setViewState("main");
       setCurrentCategory(null);
       return;
+    }
+
+    // Update text bar for non-keyboard options
+    if (viewState !== "keyboard" && label !== "TECLADO" && label !== "-" && onSelectText) {
+      onSelectText(label);
     }
 
     if (viewState === "main") {

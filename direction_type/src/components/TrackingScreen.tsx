@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { GazeGrid } from "./GazeGrid";
 import { Button } from "@/components/ui/button";
 import { Settings, Activity, Pause } from "lucide-react";
@@ -19,20 +20,29 @@ export const TrackingScreen = ({
   onRecalibrate,
   onTogglePause,
 }: TrackingScreenProps) => {
+  const [selectedText, setSelectedText] = useState("");
   console.log("Rendering TrackingScreen, HeadPosition:", headPosition);
+
   // Movement thresholds for visual feedback
   const offset = headPosition?.offset || { x: 0, y: 0 };
   const distance = Math.sqrt(offset.x ** 2 + offset.y ** 2);
   const isMisaligned = distance > 50;
   const isCriticallyMisaligned = distance > 100;
 
+  const handleSelectText = (text: string) => {
+    setSelectedText(text);
+  };
+
   return (
     <div className="h-screen w-screen bg-[#F1F5F9] flex flex-col p-4 md:p-6 gap-4">
       {/* Top Bar */}
       <div className="flex items-center gap-4 w-full">
         <div className="flex-1 bg-white rounded-2xl h-14 md:h-16 px-6 flex items-center shadow-sm">
-          <span className="text-gray-400 text-lg md:text-xl font-medium truncate">
-            Hola buenos día...
+          <span className={cn(
+            "text-lg md:text-xl font-medium truncate",
+            selectedText ? "text-slate-900" : "text-gray-400"
+          )}>
+            {selectedText || "Selecciona una frase..."}
           </span>
         </div>
 
@@ -67,7 +77,7 @@ export const TrackingScreen = ({
 
       {/* Main Grid Area */}
       <div className="flex-1 w-full bg-white rounded-3xl shadow-sm p-4 md:p-6 overflow-hidden">
-        <GazeGrid activeZone={gazeZone} onExit={onRecalibrate} />
+        <GazeGrid activeZone={gazeZone} onExit={onRecalibrate} onSelectText={handleSelectText} />
       </div>
     </div>
   );
