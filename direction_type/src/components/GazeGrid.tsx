@@ -228,6 +228,7 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
     }
 
     if (label === "BACK TO KEYBOARD") {
+      if (onSelectText) onSelectText("", true);
       setViewState("main");
       return;
     }
