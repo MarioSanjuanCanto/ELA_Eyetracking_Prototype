@@ -29,15 +29,16 @@ export const TrackingScreen = ({
   const isMisaligned = distance > 50;
   const isCriticallyMisaligned = distance > 100;
 
-  const handleSelectText = (text: string) => {
+  const handleSelectText = (text: string, isPhrase: boolean = false) => {
     setSelectedText(prev => {
       if (text === "ESPACIO") return prev + " ";
       if (text === "BORRAR") return prev.slice(0, -1);
 
-      // If it's a single letter, just append
-      if (text.length === 1) return prev + text;
-      // If it's a phrase, add a space if not empty
-      return prev + (prev ? " " : "") + text;
+      // If it's a phrase, replace the current text
+      if (isPhrase) return text;
+
+      // If it's a letter (from keyboard), append
+      return prev + text;
     });
   };
 

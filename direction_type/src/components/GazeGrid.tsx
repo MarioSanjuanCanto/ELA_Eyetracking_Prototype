@@ -6,7 +6,7 @@ import { phrases, CATEGORY_MAP } from "@/lib/phrases";
 interface GazeGridProps {
   activeZone: { row: string; col: string } | null;
   onExit?: () => void;
-  onSelectText?: (text: string) => void;
+  onSelectText?: (text: string, isPhrase?: boolean) => void;
 }
 
 const mainGrid = [
@@ -226,11 +226,10 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) =>
     // Update text bar for non-keyboard options
     if (label !== "TECLADO" && label !== "-" && onSelectText) {
       if (viewState === "keyboardLetters") {
-        onSelectText(label);
+        onSelectText(label, false);
       } else if (viewState !== "keyboard" && viewState !== "main") {
-        // If it's a category phrase, we might want to add a space or just replace
-        // For now, let's keep it as is (replacing or appending depending on TrackingScreen)
-        onSelectText(label);
+        // If it's a category phrase, we want to replace the current text
+        onSelectText(label, true);
       }
     }
 
