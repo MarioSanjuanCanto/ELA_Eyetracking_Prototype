@@ -146,9 +146,11 @@ const DwellButton = ({
           ? "bg-[#FF5A5A] text-white hover:bg-[#FF4040]"
           : type === "action"
             ? "bg-[#8B9CFF] text-white hover:bg-[#7A8BEE]"
-            : "bg-[#D0D9FC] text-slate-900 hover:bg-[#C0CBFC]",
+            : type === "success"
+              ? "bg-[#6EE7B7] text-slate-900 hover:bg-[#5EEAD4]"
+              : "bg-[#D0D9FC] text-slate-900 hover:bg-[#C0CBFC]",
         active && "ring-4 ring-primary ring-offset-2 scale-[1.01] border-white/20",
-        active && type === "danger" && "ring-[#FF5A5A]",
+        active && (type === "danger" || type === "success") && (type === "danger" ? "ring-[#FF5A5A]" : "ring-[#6EE7B7]"),
         !active && "opacity-90 hover:opacity-100"
       )}
     >
@@ -266,18 +268,15 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) =>
         for (let c = 0; c < 3; c++) {
           if (r === 1 && c === 1) {
             items[r][c] = { label: "[ATRÁS]", type: "action" };
+          } else if (r === 2 && c === 0) {
+            items[r][c] = { label: "ESPACIO", type: "success" };
+          } else if (r === 2 && c === 2) {
+            items[r][c] = { label: "BORRAR", type: "danger" };
           } else if (letterIdx < letters.length) {
             items[r][c] = { label: letters[letterIdx], type: "default" };
             letterIdx++;
           } else {
-            // Fill remaining slots with SPACE and BACKSPACE if possible
-            if (r === 2 && c === 1) {
-              items[r][c] = { label: "ESPACIO", type: "action" };
-            } else if (r === 2 && c === 2) {
-              items[r][c] = { label: "BORRAR", type: "danger" };
-            } else {
-              items[r][c] = { label: "-", type: "default" };
-            }
+            items[r][c] = { label: "-", type: "default" };
           }
         }
       }
