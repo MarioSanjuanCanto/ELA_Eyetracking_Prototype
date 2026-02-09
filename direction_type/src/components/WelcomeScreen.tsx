@@ -71,6 +71,21 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             Remember to be centered and have good lightning for a better performance
           </p>
         </div>
+
+        {/* Footer Logos */}
+        <div className="flex items-center gap-8 pt-4 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+          <img
+            src="/VRAIN_Logo.png"
+            alt="VRAIN Logo"
+            className="h-8 md:h-10 w-auto object-contain"
+          />
+          <div className="h-6 w-px bg-slate-300" />
+          <img
+            src="/vertexlit_logo.png"
+            alt="VertexLit Logo"
+            className="h-8 md:h-10 w-auto object-contain"
+          />
+        </div>
       </div>
     </div>
   );

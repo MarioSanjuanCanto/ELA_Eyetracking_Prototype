@@ -119,6 +119,18 @@ export const CalibrationScreen = ({
           </p>
         </div>
       </div>
+
+      {/* Decorative Branding */}
+      <img
+        src="/VRAIN_Logo.png"
+        alt="VRAIN"
+        className="absolute bottom-4 left-4 h-6 w-auto opacity-20 hover:opacity-100 transition-opacity"
+      />
+      <img
+        src="/vertexlit_logo.png"
+        alt="VertexLit"
+        className="absolute bottom-4 right-4 h-6 w-auto opacity-20 hover:opacity-100 transition-opacity"
+      />
     </div>
   );
 };

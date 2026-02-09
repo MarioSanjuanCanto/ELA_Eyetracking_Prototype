@@ -101,6 +101,20 @@ export const TrackingScreen = ({
       <div className="flex-1 w-full bg-white rounded-3xl shadow-sm p-4 md:p-6 overflow-hidden">
         <GazeGrid activeZone={gazeZone} onExit={onRecalibrate} onSelectText={handleSelectText} selectedText={selectedText} />
       </div>
+
+      {/* Footer Branding */}
+      <div className="flex items-center justify-end gap-6 px-4 py-1 opacity-40 hover:opacity-100 transition-opacity duration-300">
+        <img
+          src="/VRAIN_Logo.png"
+          alt="VRAIN"
+          className="h-5 w-auto object-contain grayscale"
+        />
+        <img
+          src="/vertexlit_logo.png"
+          alt="VertexLit"
+          className="h-5 w-auto object-contain grayscale"
+        />
+      </div>
     </div>
   );
 };
