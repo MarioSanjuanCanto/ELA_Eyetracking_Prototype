@@ -189,9 +189,21 @@ const DwellButton = ({
   );
 };
 
+const KEYBOARD_LETTERS: Record<string, string[]> = {
+  "ABC": ["A", "B", "C"],
+  "DEF": ["D", "E", "F"],
+  "GHI": ["G", "H", "I"],
+  "JKL": ["J", "K", "L"],
+  "MNO": ["M", "N", "O"],
+  "PQR": ["P", "Q", "R"],
+  "STU": ["S", "T", "U"],
+  "VWXYZ": ["V", "W", "X", "Y", "Z"],
+};
+
 export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) => {
-  const [viewState, setViewState] = useState<"main" | "keyboard" | "category">("main");
+  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters">("main");
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
+  const [selectedKeyboardGroup, setSelectedKeyboardGroup] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleAction = (label: string) => {
@@ -201,14 +213,25 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) =>
     }
 
     if (label === "[ATRÁS]") {
-      setViewState("main");
-      setCurrentCategory(null);
+      if (viewState === "keyboardLetters") {
+        setViewState("keyboard");
+        setSelectedKeyboardGroup(null);
+      } else {
+        setViewState("main");
+        setCurrentCategory(null);
+      }
       return;
     }
 
     // Update text bar for non-keyboard options
-    if (viewState !== "keyboard" && label !== "TECLADO" && label !== "-" && onSelectText) {
-      onSelectText(label);
+    if (label !== "TECLADO" && label !== "-" && onSelectText) {
+      if (viewState === "keyboardLetters") {
+        onSelectText(label);
+      } else if (viewState !== "keyboard" && viewState !== "main") {
+        // If it's a category phrase, we might want to add a space or just replace
+        // For now, let's keep it as is (replacing or appending depending on TrackingScreen)
+        onSelectText(label);
+      }
     }
 
     if (viewState === "main") {
@@ -218,7 +241,12 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) =>
         setViewState("category");
         setCurrentCategory(label);
       }
-    } else if (viewState === "category" || viewState === "keyboard") {
+    } else if (viewState === "keyboard") {
+      if (KEYBOARD_LETTERS[label]) {
+        setSelectedKeyboardGroup(label);
+        setViewState("keyboardLetters");
+      }
+    } else if (viewState === "category" || viewState === "keyboardLetters") {
       toast({
         title: "Activado",
         description: label,
@@ -230,6 +258,32 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) =>
   const getGridItems = () => {
     if (viewState === "main") return mainGrid;
     if (viewState === "keyboard") return keyboardGridCells;
+
+    if (viewState === "keyboardLetters" && selectedKeyboardGroup) {
+      const letters = KEYBOARD_LETTERS[selectedKeyboardGroup] || [];
+      const items: { label: string; type: string }[][] = [[], [], []];
+      let letterIdx = 0;
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          if (r === 1 && c === 1) {
+            items[r][c] = { label: "[ATRÁS]", type: "action" };
+          } else if (letterIdx < letters.length) {
+            items[r][c] = { label: letters[letterIdx], type: "default" };
+            letterIdx++;
+          } else {
+            // Fill remaining slots with SPACE and BACKSPACE if possible
+            if (r === 2 && c === 1) {
+              items[r][c] = { label: "ESPACIO", type: "action" };
+            } else if (r === 2 && c === 2) {
+              items[r][c] = { label: "BORRAR", type: "danger" };
+            } else {
+              items[r][c] = { label: "-", type: "default" };
+            }
+          }
+        }
+      }
+      return items;
+    }
 
     // Create 3x3 grid for category phrases
     if (viewState === "category" && currentCategory) {
