@@ -7,6 +7,7 @@ interface GazeGridProps {
   activeZone: { row: string; col: string } | null;
   onExit?: () => void;
   onSelectText?: (text: string, isPhrase?: boolean) => void;
+  selectedText: string;
 }
 
 const mainGrid = [
@@ -17,7 +18,7 @@ const mainGrid = [
   ],
   [
     { label: "Preguntas", type: "default" },
-    { label: "[SALIR]", type: "action" },
+    { label: "ENVIAR", type: "action" },
     { label: "Control del entorno", type: "default" },
   ],
   [
@@ -50,11 +51,13 @@ const DwellButton = ({
   type,
   active,
   onAction,
+  isDisabled = false,
 }: {
   label: string;
   type: string;
   active: boolean;
   onAction: (label: string) => void;
+  isDisabled?: boolean;
 }) => {
   const { toast } = useToast();
   const [progress, setProgress] = useState(0);
@@ -148,10 +151,13 @@ const DwellButton = ({
             ? "bg-[#8B9CFF] text-white hover:bg-[#7A8BEE]"
             : type === "success"
               ? "bg-[#6EE7B7] text-slate-900 hover:bg-[#5EEAD4]"
-              : "bg-[#D0D9FC] text-slate-900 hover:bg-[#C0CBFC]",
+              : type === "disabled"
+                ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                : "bg-[#D0D9FC] text-slate-900 hover:bg-[#C0CBFC]",
         active && "ring-4 ring-primary ring-offset-2 scale-[1.01] border-white/20",
         active && (type === "danger" || type === "success") && (type === "danger" ? "ring-[#FF5A5A]" : "ring-[#6EE7B7]"),
-        !active && "opacity-90 hover:opacity-100"
+        (isDisabled || !active) && "opacity-90 hover:opacity-100",
+        isDisabled && "opacity-50 hover:opacity-50 hover:shadow-none"
       )}
     >
       <span className="relative z-10">{label}</span>
@@ -202,15 +208,32 @@ const KEYBOARD_LETTERS: Record<string, string[]> = {
   "VWXYZ": ["V", "W", "X", "Y", "Z"],
 };
 
-export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) => {
-  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters">("main");
+export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: GazeGridProps) => {
+  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation">("main");
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [selectedKeyboardGroup, setSelectedKeyboardGroup] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleAction = (label: string) => {
-    if (label === "[SALIR]") {
+    if (label === "ENVIAR") {
+      if (selectedText.trim()) {
+        setViewState("confirmation");
+      }
+      return;
+    }
+
+    if (label === "EXIT") {
       if (onExit) onExit();
+      return;
+    }
+
+    if (label === "BACK TO KEYBOARD") {
+      setViewState("main");
+      return;
+    }
+
+    if (label === "WAIT") {
+      // Do nothing
       return;
     }
 
@@ -305,6 +328,16 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) =>
       return items;
     }
 
+    if (viewState === "confirmation") {
+      return [
+        [
+          { label: "EXIT", type: "danger" },
+          { label: "WAIT", type: "action" },
+          { label: "BACK TO KEYBOARD", type: "success" },
+        ]
+      ];
+    }
+
     return mainGrid;
   };
 
@@ -312,6 +345,17 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) =>
 
   const isActive = (row: number, col: number) => {
     if (!activeZone) return false;
+
+    if (viewState === "confirmation") {
+      // 1x3 Grid mapping
+      if (row !== 0) return false;
+      const colMatch =
+        (activeZone.col === "left" && col === 0) ||
+        (activeZone.col === "center" && col === 1) ||
+        (activeZone.col === "right" && col === 2);
+      return colMatch;
+    }
+
     const rowMatch =
       (activeZone.row === "up" && row === 0) ||
       (activeZone.row === "middle" && row === 1) ||
@@ -324,18 +368,34 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText }: GazeGridProps) =>
   };
 
   return (
-    <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full h-full">
-      {gridItems.map((row, rowIndex) =>
-        row.map((item, colIndex) => (
-          <DwellButton
-            key={`${viewState}-${currentCategory}-${rowIndex}-${colIndex}`}
-            label={item.label}
-            type={item.type}
-            active={isActive(rowIndex, colIndex)}
-            onAction={handleAction}
-          />
-        ))
+    <div className="flex flex-col w-full h-full gap-4">
+      {viewState === "confirmation" && (
+        <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 rounded-3xl mb-4 border-2 border-slate-100 min-h-[200px]">
+          <p className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-800 text-center break-words max-w-4xl">
+            {selectedText}
+          </p>
+        </div>
       )}
+      <div className={cn(
+        "grid gap-4 w-full",
+        viewState === "confirmation" ? "grid-cols-3 grid-rows-1 h-32 md:h-40" : "grid-cols-3 grid-rows-3 flex-1"
+      )}>
+        {gridItems.map((row, rowIndex) =>
+          row.map((item, colIndex) => {
+            const isBtnDisabled = item.label === "ENVIAR" && (!selectedText || !selectedText.trim());
+            return (
+              <DwellButton
+                key={`${viewState}-${currentCategory}-${rowIndex}-${colIndex}`}
+                label={item.label}
+                type={isBtnDisabled ? "disabled" : item.type}
+                active={!isBtnDisabled && isActive(rowIndex, colIndex)}
+                onAction={(lbl) => !isBtnDisabled && handleAction(lbl)}
+                isDisabled={isBtnDisabled}
+              />
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };
