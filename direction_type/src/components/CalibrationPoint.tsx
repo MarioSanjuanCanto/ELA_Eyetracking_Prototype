@@ -57,14 +57,19 @@ export const CalibrationPoint = ({
               strokeLinecap="round"
             />
           </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-primary-foreground pointer-events-none">
+            {Math.max(1, Math.ceil((2000 * (100 - progress)) / 100 / 1000))}
+          </span>
         </>
       )}
-      <span
-        className={cn(
-          "w-3 h-3 rounded-full relative z-10",
-          isClicked ? "bg-primary" : "bg-primary-foreground"
-        )}
-      />
+      {!isActive && (
+        <span
+          className={cn(
+            "w-2 h-2 rounded-full",
+            isClicked ? "bg-primary" : "bg-primary-foreground/50"
+          )}
+        />
+      )}
     </button>
   );
 };
