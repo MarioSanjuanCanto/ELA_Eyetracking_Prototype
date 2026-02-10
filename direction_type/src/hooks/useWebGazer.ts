@@ -16,8 +16,27 @@ export interface HeadPosition {
   offset: { x: number; y: number };
 }
 
-const SMOOTHING_BUFFER_SIZE = 10; // Number of samples to average
-const ZONE_STABILITY_THRESHOLD = 5; // Number of consistent readings before switching zones
+// --- Tuning constants ---
+const SMOOTHING_BUFFER_SIZE = 12;
+const ZONE_STABILITY_THRESHOLD = 6;
+
+// Facemesh landmark indices (468-point model)
+// Using midpoint of inner eye corners for stable head position tracking
+const FACE_LEFT_EYE_INNER = 133;
+const FACE_RIGHT_EYE_INNER = 362;
+const FACE_NOSE_TIP = 1;
+
+// Number of clicks recorded per calibration point for richer training data
+const CLICKS_PER_CALIBRATION_POINT = 5;
+
+// Head drift: if face center moves > this many px from anchor, we consider it "drifted"
+const HEAD_DRIFT_THRESHOLD = 8;
+
+// How many frames the head must stay still before we trigger auto-recalibration
+const HEAD_STABLE_FRAMES = 30; // ~1s at 30fps
+
+// How close the face center must be frame-to-frame to count as "still"
+const HEAD_STILL_EPSILON = 1.5;
 
 export const useWebGazer = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +53,16 @@ export const useWebGazer = () => {
     count: 0,
   });
   const currentStableZoneRef = useRef<GazeZone | null>(null);
+
+  // Stores the calibration screen positions so we can re-inject them
+  const calibrationDataRef = useRef<{ x: number; y: number }[]>([]);
+
+  // Head stability tracking for auto-recalibration
+  const headStableRef = useRef({
+    lastPos: { x: 0, y: 0 },
+    stableCount: 0,
+    hasRecalibrated: false, // prevents repeated recalibrations at same position
+  });
 
   const calculateZone = useCallback((x: number, y: number): GazeZone => {
     const width = window.innerWidth;
@@ -60,12 +89,13 @@ export const useWebGazer = () => {
       buffer.shift();
     }
 
+    // Exponential weighted moving average — more recent frames count more
     let totalWeight = 0;
     let weightedX = 0;
     let weightedY = 0;
 
     buffer.forEach((pos, index) => {
-      const weight = index + 1;
+      const weight = Math.pow(1.5, index); // Exponential weighting
       weightedX += pos.x * weight;
       weightedY += pos.y * weight;
       totalWeight += weight;
@@ -101,6 +131,43 @@ export const useWebGazer = () => {
     return currentStable || rawZone;
   }, []);
 
+  /**
+   * Re-injects all stored calibration data points into WebGazer's model.
+   * This teaches the regression model the new face position → screen mapping
+   * without changing the predicted gaze coordinates at all.
+   */
+  const reinjectCalibrationData = useCallback(() => {
+    const wg = webgazerRef.current;
+    if (!wg || calibrationDataRef.current.length === 0) return;
+
+    // Feed each stored calibration point back into the model
+    for (const point of calibrationDataRef.current) {
+      wg.recordScreenPosition(point.x, point.y, "click");
+    }
+
+    // Update the face anchor to the current face center
+    try {
+      const tracker = wg.getTracker();
+      const positions = tracker.getPositions();
+      if (positions && positions.length > 0) {
+        const leftEye = positions[FACE_LEFT_EYE_INNER];
+        const rightEye = positions[FACE_RIGHT_EYE_INNER];
+        if (leftEye && rightEye) {
+          faceAnchorRef.current = {
+            x: (leftEye[0] + rightEye[0]) / 2,
+            y: (leftEye[1] + rightEye[1]) / 2,
+          };
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    console.log(
+      "Auto head-centering: re-injected",
+      calibrationDataRef.current.length,
+      "calibration points"
+    );
+  }, []);
+
   const initialize = useCallback(async () => {
     if (webgazerRef.current) return;
 
@@ -109,6 +176,8 @@ export const useWebGazer = () => {
     zoneCounterRef.current = { zone: null, count: 0 };
     currentStableZoneRef.current = null;
     faceAnchorRef.current = null;
+    calibrationDataRef.current = [];
+    headStableRef.current = { lastPos: { x: 0, y: 0 }, stableCount: 0, hasRecalibrated: false };
 
     try {
       const webgazerModule = await import("webgazer");
@@ -124,35 +193,74 @@ export const useWebGazer = () => {
       await webgazer
         .setGazeListener((data: { x: number; y: number } | null) => {
           if (data) {
-            // Head tracking distance check
+            // --- Head tracking (TFFaceMesh: getPositions() returns 468 landmarks as [x,y,z] arrays) ---
             try {
               const tracker = webgazer.getTracker();
-              const points = tracker.getCurrentPosition();
-              if (points && points[62]) {
-                const currentNose = { x: points[62][0], y: points[62][1] };
+              const positions = tracker.getPositions();
+              if (positions && positions.length > 0) {
+                // Use midpoint between inner eye corners for stable head tracking
+                const leftEye = positions[FACE_LEFT_EYE_INNER];
+                const rightEye = positions[FACE_RIGHT_EYE_INNER];
 
-                if (!faceAnchorRef.current) {
-                  faceAnchorRef.current = currentNose;
+                if (leftEye && rightEye) {
+                  const faceCenter = {
+                    x: (leftEye[0] + rightEye[0]) / 2,
+                    y: (leftEye[1] + rightEye[1]) / 2,
+                  };
+
+                  if (!faceAnchorRef.current) {
+                    faceAnchorRef.current = faceCenter;
+                  }
+
+                  const offset = {
+                    x: faceCenter.x - faceAnchorRef.current.x,
+                    y: faceCenter.y - faceAnchorRef.current.y,
+                  };
+
+                  setHeadPosition({
+                    x: faceCenter.x,
+                    y: faceCenter.y,
+                    offset,
+                  });
+
+                  const headDrift = Math.sqrt(offset.x ** 2 + offset.y ** 2);
+                  const hs = headStableRef.current;
+
+                  // Check if the head is "still" (not moving between frames)
+                  const frameDelta = Math.sqrt(
+                    (faceCenter.x - hs.lastPos.x) ** 2 +
+                    (faceCenter.y - hs.lastPos.y) ** 2
+                  );
+
+                  if (frameDelta < HEAD_STILL_EPSILON) {
+                    hs.stableCount++;
+                  } else {
+                    hs.stableCount = 0;
+                    hs.hasRecalibrated = false;
+                  }
+                  hs.lastPos = { ...faceCenter };
+
+                  // If head has drifted and is now stable, re-inject calibration data
+                  if (
+                    headDrift > HEAD_DRIFT_THRESHOLD &&
+                    hs.stableCount >= HEAD_STABLE_FRAMES &&
+                    !hs.hasRecalibrated
+                  ) {
+                    reinjectCalibrationData();
+                    hs.hasRecalibrated = true;
+                    hs.stableCount = 0;
+                  }
                 }
-
-                const offset = {
-                  x: currentNose.x - faceAnchorRef.current.x,
-                  y: currentNose.y - faceAnchorRef.current.y
-                };
-
-                setHeadPosition({
-                  x: currentNose.x,
-                  y: currentNose.y,
-                  offset
-                });
               }
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+              // Log once for debugging, then ignore
+              console.warn("Head tracking error:", e);
+            }
 
-            // Apply smoothing
+            // --- Gaze processing (NO manual coordinate manipulation) ---
             const smoothedPos = smoothPosition({ x: data.x, y: data.y });
             setGazePosition(smoothedPos);
 
-            // Calculate and stabilize zone
             const rawZone = calculateZone(smoothedPos.x, smoothedPos.y);
             const stableZone = stabilizeZone(rawZone);
             setGazeZone(stableZone);
@@ -161,14 +269,13 @@ export const useWebGazer = () => {
         .begin();
 
       webgazer.showVideoPreview(false).showPredictionPoints(false);
-
       setIsTracking(true);
     } catch (error) {
       console.error("Failed to initialize WebGazer:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [calculateZone, smoothPosition, stabilizeZone]);
+  }, [calculateZone, smoothPosition, stabilizeZone, reinjectCalibrationData]);
 
   const stop = useCallback(() => {
     if (webgazerRef.current) {
@@ -182,6 +289,7 @@ export const useWebGazer = () => {
       positionBufferRef.current = [];
       zoneCounterRef.current = { zone: null, count: 0 };
       currentStableZoneRef.current = null;
+      calibrationDataRef.current = [];
     }
   }, []);
 
@@ -199,18 +307,37 @@ export const useWebGazer = () => {
     }
   }, []);
 
+  /**
+   * Records a calibration click AND stores it for future re-injection.
+   * Fires multiple clicks per point for richer training data.
+   */
   const recordClick = useCallback((x: number, y: number) => {
     if (webgazerRef.current) {
-      webgazerRef.current.recordScreenPosition(x, y, "click");
+      for (let i = 0; i < CLICKS_PER_CALIBRATION_POINT; i++) {
+        webgazerRef.current.recordScreenPosition(x, y, "click");
+      }
+      // Store the point for later re-training
+      calibrationDataRef.current.push({ x, y });
     }
   }, []);
 
   const setFaceAnchor = useCallback(() => {
     if (webgazerRef.current) {
-      const tracker = webgazerRef.current.getTracker();
-      const points = tracker.getCurrentPosition();
-      if (points && points[62]) {
-        faceAnchorRef.current = { x: points[62][0], y: points[62][1] };
+      try {
+        const tracker = webgazerRef.current.getTracker();
+        const positions = tracker.getPositions();
+        if (positions && positions.length > 0) {
+          const leftEye = positions[FACE_LEFT_EYE_INNER];
+          const rightEye = positions[FACE_RIGHT_EYE_INNER];
+          if (leftEye && rightEye) {
+            faceAnchorRef.current = {
+              x: (leftEye[0] + rightEye[0]) / 2,
+              y: (leftEye[1] + rightEye[1]) / 2,
+            };
+          }
+        }
+      } catch (e) {
+        console.warn("setFaceAnchor error:", e);
       }
     }
   }, []);

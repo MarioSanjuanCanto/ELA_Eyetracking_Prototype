@@ -23,11 +23,11 @@ export const TrackingScreen = ({
   const [selectedText, setSelectedText] = useState("");
   console.log("Rendering TrackingScreen, HeadPosition:", headPosition);
 
-  // Movement thresholds for visual feedback
+  // Movement thresholds for visual feedback (match HEAD_DRIFT_THRESHOLD in useWebGazer)
   const offset = headPosition?.offset || { x: 0, y: 0 };
   const distance = Math.sqrt(offset.x ** 2 + offset.y ** 2);
-  const isMisaligned = distance > 50;
-  const isCriticallyMisaligned = distance > 100;
+  const isMisaligned = distance > 12;
+  const isCriticallyMisaligned = distance > 25;
 
   const handleSelectText = (text: string, isPhrase: boolean = false) => {
     setSelectedText(prev => {
@@ -69,6 +69,43 @@ export const TrackingScreen = ({
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Head Centering status */}
+          <div className={cn(
+            "h-14 px-4 rounded-xl bg-white border shadow-sm flex items-center gap-3 transition-colors duration-300",
+            isCriticallyMisaligned ? "border-red-200 bg-red-50" :
+              isMisaligned ? "border-amber-200 bg-amber-50" : "border-white"
+          )}>
+            <div className="relative w-8 h-8 flex items-center justify-center">
+              <div className={cn(
+                "absolute inset-0 rounded-full border-2 transition-all duration-300",
+                isCriticallyMisaligned ? "border-red-400 animate-pulse" :
+                  isMisaligned ? "border-amber-400" : "border-emerald-400"
+              )} />
+              <div
+                className={cn(
+                  "w-2 h-2 rounded-full transition-all duration-300",
+                  isCriticallyMisaligned ? "bg-red-500" :
+                    isMisaligned ? "bg-amber-500" : "bg-emerald-500"
+                )}
+                style={{
+                  transform: `translate(${offset.x / 1.5}px, ${offset.y / 1.5}px)`
+                }}
+              />
+            </div>
+            <div className="hidden lg:flex flex-col justify-center">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 leading-none mb-1">
+                Head Centering
+              </span>
+              <span className={cn(
+                "text-sm font-semibold leading-none",
+                isCriticallyMisaligned ? "text-red-600" :
+                  isMisaligned ? "text-amber-600" : "text-emerald-600"
+              )}>
+                {isCriticallyMisaligned ? "Recentering..." : isMisaligned ? "Adjusting..." : "Centered"}
+              </span>
+            </div>
+          </div>
+
           <Button
             variant="outline"
             className="h-14 px-6 rounded-xl bg-white border-white shadow-sm hover:bg-white/90 text-slate-700 font-semibold gap-2"
