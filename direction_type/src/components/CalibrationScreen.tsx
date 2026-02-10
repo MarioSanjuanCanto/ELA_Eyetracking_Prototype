@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { CalibrationPoint } from "./CalibrationPoint";
 import { Button } from "@/components/ui/button";
 import { Eye, Loader2 } from "lucide-react";
@@ -22,6 +22,8 @@ const calibrationPoints = [
   { x: 90, y: 90 },
 ];
 
+const DWELL_TIME = 2000; // 2 seconds
+
 export const CalibrationScreen = ({
   onComplete,
   onRecordClick,
@@ -30,11 +32,15 @@ export const CalibrationScreen = ({
 }: CalibrationScreenProps) => {
   const [clickedPoints, setClickedPoints] = useState<number[]>([]);
   const [currentPoint, setCurrentPoint] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   const handlePointClick = useCallback(
     (index: number, x: number, y: number) => {
       const screenX = (x / 100) * window.innerWidth;
       const screenY = (y / 100) * window.innerHeight;
+
+      // Reset progress BEFORE recording/advancing
+      setProgress(0);
 
       onRecordClick(screenX, screenY);
       setClickedPoints((prev) => [...prev, index]);
@@ -55,7 +61,35 @@ export const CalibrationScreen = ({
     [onComplete, onRecordClick, setFaceAnchor]
   );
 
-  const progress = (clickedPoints.length / calibrationPoints.length) * 100;
+  useEffect(() => {
+    if (isLoading) return;
+
+    const interval = 50; // Quicker update for smoother animation
+    const increment = (interval / DWELL_TIME) * 100;
+
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        const next = prev + increment;
+        if (next >= 100) {
+          return 100;
+        }
+        return next;
+      });
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [currentPoint, isLoading]);
+
+  useEffect(() => {
+    if (progress >= 100) {
+      const point = calibrationPoints[currentPoint];
+      if (point) {
+        handlePointClick(currentPoint, point.x, point.y);
+      }
+    }
+  }, [progress, currentPoint, handlePointClick]);
+
+  const totalProgress = (clickedPoints.length / calibrationPoints.length) * 100;
 
   return (
     <div className="fixed inset-0 bg-background grid-bg flex flex-col">
@@ -68,17 +102,17 @@ export const CalibrationScreen = ({
           <div>
             <h1 className="text-lg font-semibold text-foreground">Calibration</h1>
             <p className="text-sm text-muted-foreground">
-              Click each point while looking at it
+              Keep looking at the point until the ring completes
             </p>
           </div>
         </div>
 
-        {/* Progress */}
+        {/* Total Progress */}
         <div className="flex items-center gap-3">
           <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-primary transition-all duration-300"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${totalProgress}%` }}
             />
           </div>
           <span className="text-sm text-muted-foreground font-medium">
@@ -106,6 +140,7 @@ export const CalibrationScreen = ({
           onClick={() => handlePointClick(index, point.x, point.y)}
           isClicked={clickedPoints.includes(index)}
           isActive={index === currentPoint && !isLoading}
+          progress={index === currentPoint ? progress : 0}
         />
       ))}
 
@@ -115,7 +150,7 @@ export const CalibrationScreen = ({
           <p className="text-sm text-muted-foreground text-center">
             {isLoading
               ? "Please allow camera access when prompted"
-              : `Look at the glowing point and click it`}
+              : `Look at the glowing point`}
           </p>
         </div>
       </div>
