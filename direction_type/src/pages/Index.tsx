@@ -47,6 +47,11 @@ const Index = () => {
     }
   }, [isTracking, pause, resume]);
 
+  const handleStop = useCallback(() => {
+    stop();
+    setAppState("welcome");
+  }, [stop]);
+
   if (appState === "welcome") {
     return <WelcomeScreen onStart={handleStart} />;
   }
@@ -69,6 +74,7 @@ const Index = () => {
       headPosition={headPosition}
       onRecalibrate={handleRecalibrate}
       onTogglePause={handleTogglePause}
+      onStop={handleStop}
     />
   );
 };

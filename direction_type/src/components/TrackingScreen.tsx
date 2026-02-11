@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { GazeGrid } from "./GazeGrid";
 import { Button } from "@/components/ui/button";
-import { Settings, Activity, Pause, Eraser } from "lucide-react";
+import { Settings, Activity, Pause, Eraser, LogOut } from "lucide-react";
 import { GazeZone, HeadPosition } from "@/hooks/useWebGazer";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ interface TrackingScreenProps {
   headPosition: HeadPosition | null;
   onRecalibrate: () => void;
   onTogglePause: () => void;
+  onStop: () => void;
 }
 
 export const TrackingScreen = ({
@@ -19,6 +20,7 @@ export const TrackingScreen = ({
   headPosition,
   onRecalibrate,
   onTogglePause,
+  onStop,
 }: TrackingScreenProps) => {
   const [selectedText, setSelectedText] = useState("");
   console.log("Rendering TrackingScreen, HeadPosition:", headPosition);
@@ -164,6 +166,15 @@ export const TrackingScreen = ({
               </span>
             </div>
           </div>
+
+          <Button
+            variant="outline"
+            className="h-14 px-6 rounded-xl bg-white border-white shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-700 font-semibold gap-2"
+            onClick={onStop}
+          >
+            <LogOut className="w-5 h-5" />
+            Exit
+          </Button>
 
           <Button
             variant="outline"
