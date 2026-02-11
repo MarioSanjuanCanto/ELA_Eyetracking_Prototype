@@ -49,23 +49,58 @@ export const TrackingScreen = ({
   // Auto-recalibrate if head is misaligned for > 2 seconds
   const misalignmentTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const playWarningSound = () => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch (e) {
+      console.error("Audio warning failed:", e);
+    }
+  };
+
   useEffect(() => {
-    if (isMisaligned || isCriticallyMisaligned) {
+    const isUnstable = isMisaligned || isCriticallyMisaligned;
+
+    if (isUnstable) {
       if (!misalignmentTimerRef.current) {
+        console.log("Head misalignment detected. Starting 2s timer...");
+        playWarningSound(); // Warn the user immediately
+
         misalignmentTimerRef.current = setTimeout(() => {
+          console.log("Timer finished. Recalibrating...");
           onRecalibrate();
         }, 2000);
       }
     } else {
       if (misalignmentTimerRef.current) {
+        console.log("Head realigned. Cancelling timer.");
         clearTimeout(misalignmentTimerRef.current);
         misalignmentTimerRef.current = null;
       }
     }
 
     return () => {
-      if (misalignmentTimerRef.current) {
+      // Clean up timer on unmount, but NOT on every render if state hasn't changed
+      if (misalignmentTimerRef.current && !isUnstable) {
         clearTimeout(misalignmentTimerRef.current);
+        misalignmentTimerRef.current = null;
       }
     };
   }, [isMisaligned, isCriticallyMisaligned, onRecalibrate]);
