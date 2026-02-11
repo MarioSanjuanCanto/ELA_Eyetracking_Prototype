@@ -19,6 +19,7 @@ const Index = () => {
     resume,
     recordClick,
     setFaceAnchor,
+    clearCalibration,
   } = useWebGazer();
 
   const handleStart = useCallback(async () => {
@@ -32,9 +33,11 @@ const Index = () => {
   }, []);
 
   const handleRecalibrate = useCallback(() => {
-    stop();
-    setAppState("welcome");
-  }, [stop]);
+    // Instead of stopping, clear data and switch to calibration view immediately
+    console.log("Resetting calibration...");
+    clearCalibration();
+    setAppState("calibrating");
+  }, [clearCalibration]);
 
   const handleTogglePause = useCallback(() => {
     if (isTracking) {

@@ -68,6 +68,21 @@ export const useWebGazer = () => {
     hasRecalibrated: false, // prevents repeated recalibrations at same position
   });
 
+  const webgazerModuleRef = useRef<any>(null);
+
+  // Preload WebGazer script on mount to reduce wait time
+  useEffect(() => {
+    const preload = async () => {
+      try {
+        const module = await import("webgazer");
+        webgazerModuleRef.current = (module as any).default || module;
+      } catch (e) {
+        console.warn("Failed to preload WebGazer:", e);
+      }
+    };
+    preload();
+  }, []);
+
   const calculateZone = useCallback((x: number, y: number): GazeZone => {
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -184,8 +199,14 @@ export const useWebGazer = () => {
     headStableRef.current = { lastPos: { x: 0, y: 0 }, stableCount: 0, hasRecalibrated: false };
 
     try {
-      const webgazerModule = await import("webgazer");
-      const webgazer = (webgazerModule as any).default || webgazerModule;
+      // Use preloaded module if available, otherwise fetch it
+      let webgazer = webgazerModuleRef.current;
+      if (!webgazer) {
+        const webgazerModule = await import("webgazer");
+        webgazer = (webgazerModule as any).default || webgazerModule;
+        webgazerModuleRef.current = webgazer;
+      }
+
       webgazerRef.current = webgazer;
 
       try {
@@ -339,6 +360,19 @@ export const useWebGazer = () => {
     }
   }, []);
 
+  const clearCalibration = useCallback(() => {
+    if (webgazerRef.current) {
+      try {
+        webgazerRef.current.clearData();
+      } catch (e) {
+        console.warn("Failed to clear webgazer data:", e);
+      }
+    }
+    calibrationDataRef.current = [];
+    faceAnchorRef.current = null;
+    setHeadPosition(null);
+  }, []);
+
   useEffect(() => {
     return () => {
       // end() removed from here for persistence
@@ -357,5 +391,6 @@ export const useWebGazer = () => {
     resume,
     recordClick,
     setFaceAnchor,
+    clearCalibration,
   };
 };
