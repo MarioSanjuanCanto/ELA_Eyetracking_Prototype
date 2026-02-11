@@ -38,6 +38,10 @@ const HEAD_STABLE_FRAMES = 30; // ~1s at 30fps
 // How close the face center must be frame-to-frame to count as "still"
 const HEAD_STILL_EPSILON = 1.5;
 
+// Compensation factor: Shift gaze per pixel of head movement.
+// Positive value = if head moves Right, shift Gaze Right.
+const HEAD_COMPENSATION_FACTOR = 3.5;
+
 export const useWebGazer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
@@ -193,6 +197,8 @@ export const useWebGazer = () => {
       await webgazer
         .setGazeListener((data: { x: number; y: number } | null) => {
           if (data) {
+            let liveOffset = { x: 0, y: 0 };
+
             // --- Head tracking (TFFaceMesh: getPositions() returns 468 landmarks as [x,y,z] arrays) ---
             try {
               const tracker = webgazer.getTracker();
@@ -212,7 +218,7 @@ export const useWebGazer = () => {
                     faceAnchorRef.current = faceCenter;
                   }
 
-                  const offset = {
+                  liveOffset = {
                     x: faceCenter.x - faceAnchorRef.current.x,
                     y: faceCenter.y - faceAnchorRef.current.y,
                   };
@@ -220,13 +226,11 @@ export const useWebGazer = () => {
                   setHeadPosition({
                     x: faceCenter.x,
                     y: faceCenter.y,
-                    offset,
+                    offset: liveOffset,
                   });
 
-                  const headDrift = Math.sqrt(offset.x ** 2 + offset.y ** 2);
+                  // Stability check for visual feedback
                   const hs = headStableRef.current;
-
-                  // Check if the head is "still" (not moving between frames)
                   const frameDelta = Math.sqrt(
                     (faceCenter.x - hs.lastPos.x) ** 2 +
                     (faceCenter.y - hs.lastPos.y) ** 2
@@ -239,26 +243,19 @@ export const useWebGazer = () => {
                     hs.hasRecalibrated = false;
                   }
                   hs.lastPos = { ...faceCenter };
-
-                  // If head has drifted and is now stable, re-inject calibration data
-                  if (
-                    headDrift > HEAD_DRIFT_THRESHOLD &&
-                    hs.stableCount >= HEAD_STABLE_FRAMES &&
-                    !hs.hasRecalibrated
-                  ) {
-                    reinjectCalibrationData();
-                    hs.hasRecalibrated = true;
-                    hs.stableCount = 0;
-                  }
                 }
               }
             } catch (e) {
-              // Log once for debugging, then ignore
               console.warn("Head tracking error:", e);
             }
 
-            // --- Gaze processing (NO manual coordinate manipulation) ---
-            const smoothedPos = smoothPosition({ x: data.x, y: data.y });
+            // --- Gaze processing (with dynamic head compensation) ---
+            const compensatedRaw = {
+              x: data.x + (liveOffset.x * HEAD_COMPENSATION_FACTOR),
+              y: data.y + (liveOffset.y * HEAD_COMPENSATION_FACTOR)
+            };
+
+            const smoothedPos = smoothPosition(compensatedRaw);
             setGazePosition(smoothedPos);
 
             const rawZone = calculateZone(smoothedPos.x, smoothedPos.y);

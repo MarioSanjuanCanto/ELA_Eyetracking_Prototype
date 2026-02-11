@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { GazeGrid } from "./GazeGrid";
 import { Button } from "@/components/ui/button";
 import { Settings, Activity, Pause, Eraser } from "lucide-react";
@@ -45,6 +45,30 @@ export const TrackingScreen = ({
   const handleClear = () => {
     setSelectedText("");
   };
+
+  // Auto-recalibrate if head is misaligned for > 2 seconds
+  const misalignmentTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isMisaligned || isCriticallyMisaligned) {
+      if (!misalignmentTimerRef.current) {
+        misalignmentTimerRef.current = setTimeout(() => {
+          onRecalibrate();
+        }, 2000);
+      }
+    } else {
+      if (misalignmentTimerRef.current) {
+        clearTimeout(misalignmentTimerRef.current);
+        misalignmentTimerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (misalignmentTimerRef.current) {
+        clearTimeout(misalignmentTimerRef.current);
+      }
+    };
+  }, [isMisaligned, isCriticallyMisaligned, onRecalibrate]);
 
   return (
     <div className="h-screen w-screen bg-[#F1F5F9] flex flex-col p-4 md:p-6 gap-4">
