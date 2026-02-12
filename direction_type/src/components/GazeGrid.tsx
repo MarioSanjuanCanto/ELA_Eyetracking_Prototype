@@ -13,36 +13,64 @@ interface GazeGridProps {
 const mainGrid = [
   [
     { label: "Saludos", type: "default" },
-    { label: "Despedidas", type: "default" },
+    { label: "Preguntas", type: "default" },
     { label: "Frases Importantes", type: "default" },
   ],
   [
-    { label: "Preguntas", type: "default" },
-    { label: "ENVIAR", type: "action" },
-    { label: "Control del entorno", type: "default" },
-  ],
-  [
     { label: "TECLADO", type: "default" },
-    { label: "Necesidades", type: "default" },
+    { label: "ENVIAR", type: "action" },
     { label: "Emergencias", type: "danger" },
   ],
 ];
 
-const keyboardGridCells = [
+// Top level keyboard menu
+// Layout:
+// [A-M]     [N-Z]     [ESPACIO]
+// [BORRAR]  [-]       [ATRÁS]
+const keyboardMainGrid = [
   [
-    { label: "ABC", type: "default" },
-    { label: "DEF", type: "default" },
-    { label: "GHI", type: "default" },
+    { label: "A-M", type: "default" },
+    { label: "N-Z", type: "default" },
+    { label: "ESPACIO", type: "success" },
   ],
   [
-    { label: "JKL", type: "default" },
+    { label: "BORRAR", type: "danger" },
+    { label: "-", type: "disabled" },
     { label: "[ATRÁS]", type: "action" },
-    { label: "MNO", type: "default" },
+  ],
+];
+
+// Sub-menu for A-M
+// Layout:
+// [A-E] [F-J] [K-M]
+// [-]   [-]   [ATRÁS]
+const keyboardSubGrid1 = [
+  [
+    { label: "A-E", type: "default" },
+    { label: "F-J", type: "default" },
+    { label: "K-M", type: "default" },
   ],
   [
-    { label: "PQR", type: "default" },
-    { label: "STU", type: "default" },
-    { label: "VWXYZ", type: "default" },
+    { label: "-", type: "disabled" },
+    { label: "-", type: "disabled" },
+    { label: "[ATRÁS]", type: "action" },
+  ],
+];
+
+// Sub-menu for N-Z
+// Layout:
+// [N-Q] [R-U] [V-Z]
+// [-]   [-]   [ATRÁS]
+const keyboardSubGrid2 = [
+  [
+    { label: "N-Q", type: "default" },
+    { label: "R-U", type: "default" },
+    { label: "V-Z", type: "default" },
+  ],
+  [
+    { label: "-", type: "disabled" },
+    { label: "-", type: "disabled" },
+    { label: "[ATRÁS]", type: "action" },
   ],
 ];
 
@@ -204,18 +232,16 @@ const DwellButton = ({
 };
 
 const KEYBOARD_LETTERS: Record<string, string[]> = {
-  "ABC": ["A", "B", "C"],
-  "DEF": ["D", "E", "F"],
-  "GHI": ["G", "H", "I"],
-  "JKL": ["J", "K", "L"],
-  "MNO": ["M", "N", "O"],
-  "PQR": ["P", "Q", "R"],
-  "STU": ["S", "T", "U"],
-  "VWXYZ": ["V", "W", "X", "Y", "Z"],
+  "A-E": ["A", "B", "C", "D", "E"],
+  "F-J": ["F", "G", "H", "I", "J"],
+  "K-M": ["K", "L", "M"],
+  "N-Q": ["N", "O", "P", "Q"],
+  "R-U": ["R", "S", "T", "U"],
+  "V-Z": ["V", "W", "X", "Y", "Z"],
 };
 
 export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: GazeGridProps) => {
-  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation">("main");
+  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation" | "keyboardSub1" | "keyboardSub2">("main");
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [selectedKeyboardGroup, setSelectedKeyboardGroup] = useState<string | null>(null);
   const { toast } = useToast();
@@ -239,15 +265,22 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return;
     }
 
-    if (label === "WAIT") {
+    if (label === "WAIT" || label === "-") {
       // Do nothing
       return;
     }
 
     if (label === "[ATRÁS]") {
       if (viewState === "keyboardLetters") {
-        setViewState("keyboard");
+        // Go back to the appropriate sub-menu
+        if (["A-E", "F-J", "K-M"].includes(selectedKeyboardGroup || "")) {
+          setViewState("keyboardSub1");
+        } else {
+          setViewState("keyboardSub2");
+        }
         setSelectedKeyboardGroup(null);
+      } else if (viewState === "keyboardSub1" || viewState === "keyboardSub2") {
+        setViewState("keyboard");
       } else {
         setViewState("main");
         setCurrentCategory(null);
@@ -255,11 +288,20 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return;
     }
 
-    // Update text bar for non-keyboard options
-    if (label !== "TECLADO" && label !== "-" && onSelectText) {
+    // Update text bar for non-keypad options related to text
+    if (label === "ESPACIO") {
+      if (onSelectText) onSelectText(" ", false);
+      return;
+    }
+    if (label === "BORRAR") {
+      if (onSelectText) onSelectText("BACKSPACE", false);
+      return;
+    }
+
+    if (label !== "TECLADO" && label !== "A-M" && label !== "N-Z" && !Object.keys(KEYBOARD_LETTERS).includes(label) && onSelectText) {
       if (viewState === "keyboardLetters") {
         onSelectText(label, false);
-      } else if (viewState !== "keyboard" && viewState !== "main") {
+      } else if (viewState !== "keyboard" && viewState !== "keyboardSub1" && viewState !== "keyboardSub2" && viewState !== "main") {
         // If it's a category phrase, we want to replace the current text
         onSelectText(label, true);
       }
@@ -273,6 +315,12 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
         setCurrentCategory(label);
       }
     } else if (viewState === "keyboard") {
+      if (label === "A-M") {
+        setViewState("keyboardSub1");
+      } else if (label === "N-Z") {
+        setViewState("keyboardSub2");
+      }
+    } else if (viewState === "keyboardSub1" || viewState === "keyboardSub2") {
       if (KEYBOARD_LETTERS[label]) {
         setSelectedKeyboardGroup(label);
         setViewState("keyboardLetters");
@@ -288,46 +336,50 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
 
   const getGridItems = () => {
     if (viewState === "main") return mainGrid;
-    if (viewState === "keyboard") return keyboardGridCells;
+    if (viewState === "keyboard") return keyboardMainGrid;
+    if (viewState === "keyboardSub1") return keyboardSubGrid1;
+    if (viewState === "keyboardSub2") return keyboardSubGrid2;
 
     if (viewState === "keyboardLetters" && selectedKeyboardGroup) {
       const letters = KEYBOARD_LETTERS[selectedKeyboardGroup] || [];
-      const items: { label: string; type: string }[][] = [[], [], []];
+      const items: { label: string; type: string }[][] = [[], []];
+
+      // 2x3 Grid: 6 slots.
+      // Slot (1, 2) is Always Back.
+      // 5 Slots for letters.
       let letterIdx = 0;
-      for (let r = 0; r < 3; r++) {
+      for (let r = 0; r < 2; r++) {
         for (let c = 0; c < 3; c++) {
-          if (r === 1 && c === 1) {
+          if (r === 1 && c === 2) {
             items[r][c] = { label: "[ATRÁS]", type: "action" };
-          } else if (r === 2 && c === 0) {
-            items[r][c] = { label: "ESPACIO", type: "success" };
-          } else if (r === 2 && c === 2) {
-            items[r][c] = { label: "BORRAR", type: "danger" };
-          } else if (letterIdx < letters.length) {
-            items[r][c] = { label: letters[letterIdx], type: "default" };
-            letterIdx++;
           } else {
-            items[r][c] = { label: "-", type: "default" };
+            if (letterIdx < letters.length) {
+              items[r][c] = { label: letters[letterIdx], type: "default" };
+              letterIdx++;
+            } else {
+              items[r][c] = { label: "-", type: "disabled" };
+            }
           }
         }
       }
       return items;
     }
 
-    // Create 3x3 grid for category phrases
+    // Create 2x3 grid for category phrases
     if (viewState === "category" && currentCategory) {
       const key = CATEGORY_MAP[currentCategory];
       const categoryPhrases = phrases[key] || [];
-      const items: { label: string; type: string }[][] = [[], [], []];
+      const items: { label: string; type: string }[][] = [[], []];
 
-      // We have 8 slots (center is back)
+      // 6 slots. (1, 2) is Back. 5 phrases max.
       let phraseIdx = 0;
-      for (let r = 0; r < 3; r++) {
+      for (let r = 0; r < 2; r++) {
         for (let c = 0; c < 3; c++) {
-          if (r === 1 && c === 1) {
+          if (r === 1 && c === 2) {
             items[r][c] = { label: "[ATRÁS]", type: "action" };
           } else {
             const phrase = categoryPhrases[phraseIdx] || "-";
-            items[r][c] = { label: phrase, type: "default" };
+            items[r][c] = { label: phrase, type: phrase === "-" ? "disabled" : "default" };
             phraseIdx++;
           }
         }
@@ -363,10 +415,20 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return colMatch;
     }
 
-    const rowMatch =
-      (activeZone.row === "up" && row === 0) ||
-      (activeZone.row === "middle" && row === 1) ||
-      (activeZone.row === "down" && row === 2);
+    // Map active zones to 2 rows
+    // Up -> Row 0
+    // Down -> Row 1
+    // Middle -> Mapped to Row 1 for now if needed, or ignored.
+    // Let's assume the user might gaze perfectly in the vertical center.
+    // If we map middle->0, top row is easier. If middle->1, bottom is easier.
+    // Let's map middle to 0 (Up)
+
+    let targetRow = -1;
+    if (activeZone.row === "up") targetRow = 0;
+    if (activeZone.row === "down") targetRow = 1;
+
+    const rowMatch = row === targetRow;
+
     const colMatch =
       (activeZone.col === "left" && col === 0) ||
       (activeZone.col === "center" && col === 1) ||
@@ -375,21 +437,19 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
   };
 
   const getAlignmentClass = (rowIndex: number, colIndex: number) => {
-    // Confirmation view or special cases could stay centered
+    // Confirmation view
     if (viewState === "confirmation") return "items-center justify-center";
 
-    // Center cell always centered
-    if (rowIndex === 1 && colIndex === 1) return "items-center justify-center";
+    // 2x3 Grid Alignment
+    // Row 0: Top aligned
+    // Row 1: Bottom aligned
 
-    // Vertical alignment
     const isTop = rowIndex === 0;
-    const isBottom = rowIndex === 2;
 
-    // Horizontal alignment
     const isLeft = colIndex === 0;
     const isRight = colIndex === 2;
 
-    const vClass = isTop ? "items-start pt-8" : isBottom ? "items-end pb-8" : "items-center";
+    const vClass = isTop ? "items-start pt-8" : "items-end pb-8";
     const hClass = isLeft ? "justify-start pl-8 text-left" : isRight ? "justify-end pr-8 text-right" : "justify-center text-center";
 
     return `${vClass} ${hClass}`;
@@ -406,11 +466,11 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       )}
       <div className={cn(
         "grid gap-4 w-full",
-        viewState === "confirmation" ? "grid-cols-3 grid-rows-1 h-32 md:h-40" : "grid-cols-3 grid-rows-3 flex-1"
+        viewState === "confirmation" ? "grid-cols-3 grid-rows-1 h-32 md:h-40" : "grid-cols-3 grid-rows-2 flex-1"
       )}>
         {gridItems.map((row, rowIndex) =>
           row.map((item, colIndex) => {
-            const isBtnDisabled = item.label === "ENVIAR" && (!selectedText || !selectedText.trim());
+            const isBtnDisabled = (item.label === "ENVIAR" && (!selectedText || !selectedText.trim())) || item.type === "disabled";
             return (
               <DwellButton
                 key={`${viewState}-${currentCategory}-${rowIndex}-${colIndex}`}

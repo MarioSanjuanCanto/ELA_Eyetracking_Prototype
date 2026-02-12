@@ -6,7 +6,7 @@ export interface GazePosition {
 }
 
 export interface GazeZone {
-  row: "up" | "middle" | "down";
+  row: "up" | "down";
   col: "left" | "center" | "right";
 }
 
@@ -92,9 +92,9 @@ export const useWebGazer = () => {
     else if (x < (2 * width) / 3) col = "center";
     else col = "right";
 
-    let row: "up" | "middle" | "down";
-    if (y < height / 3) row = "up";
-    else if (y < (2 * height) / 3) row = "middle";
+    let row: "up" | "down";
+    // Split screen vertically in half for 2-row layout
+    if (y < height / 2) row = "up";
     else row = "down";
 
     return { row, col };
