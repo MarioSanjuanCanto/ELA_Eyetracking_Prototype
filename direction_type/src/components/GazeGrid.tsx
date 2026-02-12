@@ -25,47 +25,61 @@ const mainGrid = [
 
 // Top level keyboard menu
 // Layout:
-// [A-M]     [N-Z]     [ESPACIO]
-// [BORRAR]  [-]       [ATRÁS]
+// [VOCALES] [B-L]     [M-Z]
+// [ESPACIO] [BORRAR]  [ATRÁS]
 const keyboardMainGrid = [
   [
-    { label: "A-M", type: "default" },
-    { label: "N-Z", type: "default" },
+    { label: "VOCALES", type: "default" },
+    { label: "B-L", type: "default" },
+    { label: "M-Z", type: "default" },
+  ],
+  [
     { label: "ESPACIO", type: "success" },
-  ],
-  [
     { label: "BORRAR", type: "danger" },
+    { label: "[ATRÁS]", type: "action" },
+  ],
+];
+
+// Sub-menu for Vowels (Direct Access)
+// A E I
+// O U [ATRÁS]
+const keyboardVowelsGrid = [
+  [
+    { label: "A", type: "default" },
+    { label: "E", type: "default" },
+    { label: "I", type: "default" },
+  ],
+  [
+    { label: "O", type: "default" },
+    { label: "U", type: "default" },
+    { label: "[ATRÁS]", type: "action" },
+  ],
+];
+
+// Sub-menu for Consonants B-L
+// [B-G] [H-L] [-]
+// [-]   [-]   [ATRÁS]
+const keyboardConsonants1Grid = [
+  [
+    { label: "B-G", type: "default" },
+    { label: "H-L", type: "default" },
+    { label: "-", type: "disabled" },
+  ],
+  [
+    { label: "-", type: "disabled" },
     { label: "-", type: "disabled" },
     { label: "[ATRÁS]", type: "action" },
   ],
 ];
 
-// Sub-menu for A-M
-// Layout:
-// [A-E] [F-J] [K-M]
+// Sub-menu for Consonants M-Z
+// [M-Q] [R-W] [X-Z]
 // [-]   [-]   [ATRÁS]
-const keyboardSubGrid1 = [
+const keyboardConsonants2Grid = [
   [
-    { label: "A-E", type: "default" },
-    { label: "F-J", type: "default" },
-    { label: "K-M", type: "default" },
-  ],
-  [
-    { label: "-", type: "disabled" },
-    { label: "-", type: "disabled" },
-    { label: "[ATRÁS]", type: "action" },
-  ],
-];
-
-// Sub-menu for N-Z
-// Layout:
-// [N-Q] [R-U] [V-Z]
-// [-]   [-]   [ATRÁS]
-const keyboardSubGrid2 = [
-  [
-    { label: "N-Q", type: "default" },
-    { label: "R-U", type: "default" },
-    { label: "V-Z", type: "default" },
+    { label: "M-Q", type: "default" },
+    { label: "R-W", type: "default" },
+    { label: "X-Z", type: "default" },
   ],
   [
     { label: "-", type: "disabled" },
@@ -232,16 +246,15 @@ const DwellButton = ({
 };
 
 const KEYBOARD_LETTERS: Record<string, string[]> = {
-  "A-E": ["A", "B", "C", "D", "E"],
-  "F-J": ["F", "G", "H", "I", "J"],
-  "K-M": ["K", "L", "M"],
-  "N-Q": ["N", "O", "P", "Q"],
-  "R-U": ["R", "S", "T", "U"],
-  "V-Z": ["V", "W", "X", "Y", "Z"],
+  "B-G": ["B", "C", "D", "F", "G"],
+  "H-L": ["H", "J", "K", "L"], // I is a vowel
+  "M-Q": ["M", "N", "Ñ", "P", "Q"],
+  "R-W": ["R", "S", "T", "V", "W"], // U is a vowel
+  "X-Z": ["X", "Y", "Z"],
 };
 
 export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: GazeGridProps) => {
-  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation" | "keyboardSub1" | "keyboardSub2">("main");
+  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation" | "keyboardVowels" | "keyboardCons1" | "keyboardCons2">("main");
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [selectedKeyboardGroup, setSelectedKeyboardGroup] = useState<string | null>(null);
   const { toast } = useToast();
@@ -273,13 +286,15 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
     if (label === "[ATRÁS]") {
       if (viewState === "keyboardLetters") {
         // Go back to the appropriate sub-menu
-        if (["A-E", "F-J", "K-M"].includes(selectedKeyboardGroup || "")) {
-          setViewState("keyboardSub1");
+        if (["B-G", "H-L"].includes(selectedKeyboardGroup || "")) {
+          setViewState("keyboardCons1");
+        } else if (["M-Q", "R-W", "X-Z"].includes(selectedKeyboardGroup || "")) {
+          setViewState("keyboardCons2");
         } else {
-          setViewState("keyboardSub2");
+          setViewState("keyboard");
         }
         setSelectedKeyboardGroup(null);
-      } else if (viewState === "keyboardSub1" || viewState === "keyboardSub2") {
+      } else if (viewState === "keyboardVowels" || viewState === "keyboardCons1" || viewState === "keyboardCons2") {
         setViewState("keyboard");
       } else {
         setViewState("main");
@@ -298,10 +313,16 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return;
     }
 
-    if (label !== "TECLADO" && label !== "A-M" && label !== "N-Z" && !Object.keys(KEYBOARD_LETTERS).includes(label) && onSelectText) {
+    // Handle direct vowel selection
+    if (["A", "E", "I", "O", "U"].includes(label)) {
+      if (onSelectText) onSelectText(label, false);
+      return;
+    }
+
+    if (label !== "TECLADO" && label !== "VOCALES" && label !== "B-L" && label !== "M-Z" && !Object.keys(KEYBOARD_LETTERS).includes(label) && onSelectText) {
       if (viewState === "keyboardLetters") {
         onSelectText(label, false);
-      } else if (viewState !== "keyboard" && viewState !== "keyboardSub1" && viewState !== "keyboardSub2" && viewState !== "main") {
+      } else if (viewState !== "keyboard" && viewState !== "keyboardVowels" && viewState !== "keyboardCons1" && viewState !== "keyboardCons2" && viewState !== "main") {
         // If it's a category phrase, we want to replace the current text
         onSelectText(label, true);
       }
@@ -315,12 +336,14 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
         setCurrentCategory(label);
       }
     } else if (viewState === "keyboard") {
-      if (label === "A-M") {
-        setViewState("keyboardSub1");
-      } else if (label === "N-Z") {
-        setViewState("keyboardSub2");
+      if (label === "VOCALES") {
+        setViewState("keyboardVowels");
+      } else if (label === "B-L") {
+        setViewState("keyboardCons1");
+      } else if (label === "M-Z") {
+        setViewState("keyboardCons2");
       }
-    } else if (viewState === "keyboardSub1" || viewState === "keyboardSub2") {
+    } else if (viewState === "keyboardCons1" || viewState === "keyboardCons2") {
       if (KEYBOARD_LETTERS[label]) {
         setSelectedKeyboardGroup(label);
         setViewState("keyboardLetters");
@@ -337,8 +360,9 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
   const getGridItems = () => {
     if (viewState === "main") return mainGrid;
     if (viewState === "keyboard") return keyboardMainGrid;
-    if (viewState === "keyboardSub1") return keyboardSubGrid1;
-    if (viewState === "keyboardSub2") return keyboardSubGrid2;
+    if (viewState === "keyboardVowels") return keyboardVowelsGrid;
+    if (viewState === "keyboardCons1") return keyboardConsonants1Grid;
+    if (viewState === "keyboardCons2") return keyboardConsonants2Grid;
 
     if (viewState === "keyboardLetters" && selectedKeyboardGroup) {
       const letters = KEYBOARD_LETTERS[selectedKeyboardGroup] || [];
@@ -418,10 +442,6 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
     // Map active zones to 2 rows
     // Up -> Row 0
     // Down -> Row 1
-    // Middle -> Mapped to Row 1 for now if needed, or ignored.
-    // Let's assume the user might gaze perfectly in the vertical center.
-    // If we map middle->0, top row is easier. If middle->1, bottom is easier.
-    // Let's map middle to 0 (Up)
 
     let targetRow = -1;
     if (activeZone.row === "up") targetRow = 0;
@@ -441,9 +461,6 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
     if (viewState === "confirmation") return "items-center justify-center";
 
     // 2x3 Grid Alignment
-    // Row 0: Top aligned
-    // Row 1: Bottom aligned
-
     const isTop = rowIndex === 0;
 
     const isLeft = colIndex === 0;
