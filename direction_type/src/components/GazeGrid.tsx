@@ -52,12 +52,14 @@ const DwellButton = ({
   active,
   onAction,
   isDisabled = false,
+  className,
 }: {
   label: string;
   type: string;
   active: boolean;
   onAction: (label: string) => void;
   isDisabled?: boolean;
+  className?: string;
 }) => {
   const { toast } = useToast();
   const [progress, setProgress] = useState(0);
@@ -143,7 +145,11 @@ const DwellButton = ({
       id={`btn-${label.replace(/[^a-zA-Z0-9]/g, '-')}`}
       onClick={handleAction}
       className={cn(
-        "relative rounded-2xl transition-all duration-300 flex items-center justify-center p-4 text-center cursor-pointer shadow-sm hover:shadow-md h-full w-full",
+        "relative rounded-2xl transition-all duration-300 flex p-4 cursor-pointer shadow-sm hover:shadow-md h-full w-full",
+        // Default centering if no className provided
+        !className && "items-center justify-center text-center",
+        // Custom alignment classes
+        className,
         "text-base md:text-lg lg:text-xl font-bold tracking-tight select-none border-2 border-transparent",
         type === "danger"
           ? "bg-[#FF5A5A] text-white hover:bg-[#FF4040]"
@@ -368,6 +374,27 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
     return rowMatch && colMatch;
   };
 
+  const getAlignmentClass = (rowIndex: number, colIndex: number) => {
+    // Confirmation view or special cases could stay centered
+    if (viewState === "confirmation") return "items-center justify-center";
+
+    // Center cell always centered
+    if (rowIndex === 1 && colIndex === 1) return "items-center justify-center";
+
+    // Vertical alignment
+    const isTop = rowIndex === 0;
+    const isBottom = rowIndex === 2;
+
+    // Horizontal alignment
+    const isLeft = colIndex === 0;
+    const isRight = colIndex === 2;
+
+    const vClass = isTop ? "items-start pt-8" : isBottom ? "items-end pb-8" : "items-center";
+    const hClass = isLeft ? "justify-start pl-8 text-left" : isRight ? "justify-end pr-8 text-right" : "justify-center text-center";
+
+    return `${vClass} ${hClass}`;
+  };
+
   return (
     <div className="flex flex-col w-full h-full gap-4">
       {viewState === "confirmation" && (
@@ -392,6 +419,7 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
                 active={!isBtnDisabled && isActive(rowIndex, colIndex)}
                 onAction={(lbl) => !isBtnDisabled && handleAction(lbl)}
                 isDisabled={isBtnDisabled}
+                className={getAlignmentClass(rowIndex, colIndex)}
               />
             );
           })
