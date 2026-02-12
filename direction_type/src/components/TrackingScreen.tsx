@@ -206,7 +206,7 @@ export const TrackingScreen = ({
 
       {/* Main Grid Area */}
       <div className="flex-1 w-full bg-white rounded-3xl shadow-sm p-4 md:p-6 overflow-hidden">
-        <GazeGrid activeZone={gazeZone} onExit={onRecalibrate} onSelectText={handleSelectText} selectedText={selectedText} />
+        <GazeGrid activeZone={gazeZone} onExit={onStop} onSelectText={handleSelectText} selectedText={selectedText} />
       </div>
 
       {/* Footer Branding */}
