@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { phrases, CATEGORY_MAP } from "@/lib/phrases";
+import { playClickSound } from "@/lib/sounds";
 
 interface GazeGridProps {
   activeZone: { row: string; col: string } | null;
@@ -260,6 +261,7 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
   const { toast } = useToast();
 
   const handleAction = (label: string) => {
+    playClickSound();
     if (label === "ENVIAR") {
       if (selectedText.trim()) {
         setViewState("confirmation");

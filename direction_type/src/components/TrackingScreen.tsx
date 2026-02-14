@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, Activity, Pause, Eraser, LogOut } from "lucide-react";
 import { GazeZone, HeadPosition } from "@/hooks/useWebGazer";
 import { cn } from "@/lib/utils";
+import { playClickSound } from "@/lib/sounds";
 
 interface TrackingScreenProps {
   gazeZone: GazeZone | null;
@@ -170,7 +171,10 @@ export const TrackingScreen = ({
           <Button
             variant="outline"
             className="h-14 px-6 rounded-xl bg-white border-white shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-700 font-semibold gap-2"
-            onClick={onStop}
+            onClick={() => {
+              playClickSound();
+              onStop();
+            }}
           >
             <LogOut className="w-5 h-5" />
             Exit
@@ -179,7 +183,10 @@ export const TrackingScreen = ({
           <Button
             variant="outline"
             className="h-14 px-6 rounded-xl bg-white border-white shadow-sm hover:bg-white/90 text-slate-700 font-semibold gap-2"
-            onClick={onRecalibrate}
+            onClick={() => {
+              playClickSound();
+              onRecalibrate();
+            }}
           >
             <Settings className="w-5 h-5" />
             Calibrate
@@ -187,7 +194,10 @@ export const TrackingScreen = ({
 
           <Button
             className="h-14 px-8 rounded-xl bg-[#8B9CFF] hover:bg-[#7A8BEE] text-white font-semibold shadow-sm gap-2 min-w-[120px]"
-            onClick={onTogglePause}
+            onClick={() => {
+              playClickSound();
+              onTogglePause();
+            }}
           >
             {isTracking ? (
               <>
