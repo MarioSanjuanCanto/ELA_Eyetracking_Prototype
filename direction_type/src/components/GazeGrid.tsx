@@ -309,7 +309,7 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return;
     }
     if (label === "BORRAR") {
-      if (onSelectText) onSelectText("BACKSPACE", false);
+      if (onSelectText) onSelectText("BORRAR", false);
       return;
     }
 

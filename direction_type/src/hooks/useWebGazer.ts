@@ -297,7 +297,11 @@ export const useWebGazer = () => {
 
   const stop = useCallback(() => {
     if (webgazerRef.current) {
-      webgazerRef.current.end();
+      try {
+        webgazerRef.current.end();
+      } catch (e) {
+        console.warn("Error stopping WebGazer:", e);
+      }
       webgazerRef.current = null;
       setIsTracking(false);
       setGazePosition(null);
