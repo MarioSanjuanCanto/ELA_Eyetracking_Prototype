@@ -25,13 +25,13 @@ const mainGrid = [
 
 // Top level keyboard menu
 // Layout:
-// [VOCALES] [B-L]     [M-Z]
-// [ESPACIO] [BORRAR]  [ATRÁS]
+// [VOCALES] [CONSONANTES] [AI SUGGESTIONS]
+// [ESPACIO] [BORRAR]      [ATRÁS]
 const keyboardMainGrid = [
   [
     { label: "VOCALES", type: "default" },
-    { label: "B-L", type: "default" },
-    { label: "M-Z", type: "default" },
+    { label: "CONSONANTES", type: "default" },
+    { label: "AI SUGGESTIONS", type: "action" },
   ],
   [
     { label: "ESPACIO", type: "success" },
@@ -56,34 +56,18 @@ const keyboardVowelsGrid = [
   ],
 ];
 
-// Sub-menu for Consonants B-L
-// [B-G] [H-L] [-]
-// [-]   [-]   [ATRÁS]
-const keyboardConsonants1Grid = [
+// Sub-menu for All Consonants Groups
+// [B-G] [H-L] [M-Q]
+// [R-W] [X-Z] [ATRÁS]
+const keyboardConsonantsGrid = [
   [
     { label: "B-G", type: "default" },
     { label: "H-L", type: "default" },
-    { label: "-", type: "disabled" },
-  ],
-  [
-    { label: "-", type: "disabled" },
-    { label: "-", type: "disabled" },
-    { label: "[ATRÁS]", type: "action" },
-  ],
-];
-
-// Sub-menu for Consonants M-Z
-// [M-Q] [R-W] [X-Z]
-// [-]   [-]   [ATRÁS]
-const keyboardConsonants2Grid = [
-  [
     { label: "M-Q", type: "default" },
+  ],
+  [
     { label: "R-W", type: "default" },
     { label: "X-Z", type: "default" },
-  ],
-  [
-    { label: "-", type: "disabled" },
-    { label: "-", type: "disabled" },
     { label: "[ATRÁS]", type: "action" },
   ],
 ];
@@ -254,7 +238,7 @@ const KEYBOARD_LETTERS: Record<string, string[]> = {
 };
 
 export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: GazeGridProps) => {
-  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation" | "keyboardVowels" | "keyboardCons1" | "keyboardCons2">("main");
+  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation" | "keyboardVowels" | "keyboardConsonants">("main");
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [selectedKeyboardGroup, setSelectedKeyboardGroup] = useState<string | null>(null);
   const { toast } = useToast();
@@ -285,16 +269,9 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
 
     if (label === "[ATRÁS]") {
       if (viewState === "keyboardLetters") {
-        // Go back to the appropriate sub-menu
-        if (["B-G", "H-L"].includes(selectedKeyboardGroup || "")) {
-          setViewState("keyboardCons1");
-        } else if (["M-Q", "R-W", "X-Z"].includes(selectedKeyboardGroup || "")) {
-          setViewState("keyboardCons2");
-        } else {
-          setViewState("keyboard");
-        }
+        setViewState("keyboardConsonants");
         setSelectedKeyboardGroup(null);
-      } else if (viewState === "keyboardVowels" || viewState === "keyboardCons1" || viewState === "keyboardCons2") {
+      } else if (viewState === "keyboardVowels" || viewState === "keyboardConsonants") {
         setViewState("keyboard");
       } else {
         setViewState("main");
@@ -319,10 +296,10 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return;
     }
 
-    if (label !== "TECLADO" && label !== "VOCALES" && label !== "B-L" && label !== "M-Z" && !Object.keys(KEYBOARD_LETTERS).includes(label) && onSelectText) {
+    if (label !== "TECLADO" && label !== "VOCALES" && label !== "CONSONANTES" && label !== "AI SUGGESTIONS" && !Object.keys(KEYBOARD_LETTERS).includes(label) && onSelectText) {
       if (viewState === "keyboardLetters") {
         onSelectText(label, false);
-      } else if (viewState !== "keyboard" && viewState !== "keyboardVowels" && viewState !== "keyboardCons1" && viewState !== "keyboardCons2" && viewState !== "main") {
+      } else if (viewState !== "keyboard" && viewState !== "keyboardVowels" && viewState !== "keyboardConsonants" && viewState !== "main") {
         // If it's a category phrase, we want to replace the current text
         onSelectText(label, true);
       }
@@ -338,12 +315,16 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
     } else if (viewState === "keyboard") {
       if (label === "VOCALES") {
         setViewState("keyboardVowels");
-      } else if (label === "B-L") {
-        setViewState("keyboardCons1");
-      } else if (label === "M-Z") {
-        setViewState("keyboardCons2");
+      } else if (label === "CONSONANTES") {
+        setViewState("keyboardConsonants");
+      } else if (label === "AI SUGGESTIONS") {
+        toast({
+          title: "AI Suggestions",
+          description: "This feature is coming soon!",
+          className: "bg-blue-500 text-white font-bold",
+        });
       }
-    } else if (viewState === "keyboardCons1" || viewState === "keyboardCons2") {
+    } else if (viewState === "keyboardConsonants") {
       if (KEYBOARD_LETTERS[label]) {
         setSelectedKeyboardGroup(label);
         setViewState("keyboardLetters");
@@ -361,8 +342,7 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
     if (viewState === "main") return mainGrid;
     if (viewState === "keyboard") return keyboardMainGrid;
     if (viewState === "keyboardVowels") return keyboardVowelsGrid;
-    if (viewState === "keyboardCons1") return keyboardConsonants1Grid;
-    if (viewState === "keyboardCons2") return keyboardConsonants2Grid;
+    if (viewState === "keyboardConsonants") return keyboardConsonantsGrid;
 
     if (viewState === "keyboardLetters" && selectedKeyboardGroup) {
       const letters = KEYBOARD_LETTERS[selectedKeyboardGroup] || [];
