@@ -31,7 +31,7 @@ const keyboardMainGrid = [
   [
     { label: "VOCALES", type: "default" },
     { label: "CONSONANTES", type: "default" },
-    { label: "AI SUGGESTIONS", type: "action" },
+    { label: "AI SUGGESTIONS", type: "default" },
   ],
   [
     { label: "ESPACIO", type: "success" },
