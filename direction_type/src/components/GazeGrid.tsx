@@ -248,9 +248,9 @@ const DwellButton = ({
 
 const KEYBOARD_LETTERS: Record<string, string[]> = {
   "B-G": ["B", "C", "D", "F", "G"],
-  "H-L": ["H", "J", "K", "L"], // I is a vowel
+  "H-L": ["H", "J", "K", "L"],
   "M-Q": ["M", "N", "Ñ", "P", "Q"],
-  "R-W": ["R", "S", "T", "V", "W"], // U is a vowel
+  "R-W": ["R", "S", "T", "V", "W"],
   "X-Z": ["X", "Y", "Z"],
 };
 

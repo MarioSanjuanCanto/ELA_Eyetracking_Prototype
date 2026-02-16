@@ -40,7 +40,7 @@ const HEAD_STILL_EPSILON = 1.5;
 
 // Compensation factor: Shift gaze per pixel of head movement.
 // Positive value = if head moves Right, shift Gaze Right.
-const HEAD_COMPENSATION_FACTOR = 3.5;
+const HEAD_COMPENSATION_FACTOR = 4.2; // Aumentado para mayor sensibilidad en bordes
 
 export const useWebGazer = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -259,6 +259,12 @@ export const useWebGazer = () => {
 
                   if (frameDelta < HEAD_STILL_EPSILON) {
                     hs.stableCount++;
+                    // "Elastic Anchor": El ancla sigue a la cara muy sutilmente si estás quieto
+                    // Esto absorbe minidesviaciones sin saltos bruscos.
+                    if (faceAnchorRef.current) {
+                      faceAnchorRef.current.x = faceAnchorRef.current.x * 0.998 + faceCenter.x * 0.002;
+                      faceAnchorRef.current.y = faceAnchorRef.current.y * 0.998 + faceCenter.y * 0.002;
+                    }
                   } else {
                     hs.stableCount = 0;
                     hs.hasRecalibrated = false;
