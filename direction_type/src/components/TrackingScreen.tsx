@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, Activity, Pause, Eraser, LogOut } from "lucide-react";
 import { GazeZone, HeadPosition } from "@/hooks/useWebGazer";
 import { cn } from "@/lib/utils";
+import { playClickSound } from "@/lib/sounds";
 
 interface TrackingScreenProps {
   gazeZone: GazeZone | null;
@@ -12,6 +13,7 @@ interface TrackingScreenProps {
   onRecalibrate: () => void;
   onTogglePause: () => void;
   onStop: () => void;
+  usePictograms: boolean;
 }
 
 export const TrackingScreen = ({
@@ -21,6 +23,7 @@ export const TrackingScreen = ({
   onRecalibrate,
   onTogglePause,
   onStop,
+  usePictograms,
 }: TrackingScreenProps) => {
   const [selectedText, setSelectedText] = useState("");
   console.log("Rendering TrackingScreen, HeadPosition:", headPosition);
@@ -170,7 +173,10 @@ export const TrackingScreen = ({
           <Button
             variant="outline"
             className="h-14 px-6 rounded-xl bg-white border-white shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-700 font-semibold gap-2"
-            onClick={onStop}
+            onClick={() => {
+              playClickSound();
+              onStop();
+            }}
           >
             <LogOut className="w-5 h-5" />
             Exit
@@ -179,7 +185,10 @@ export const TrackingScreen = ({
           <Button
             variant="outline"
             className="h-14 px-6 rounded-xl bg-white border-white shadow-sm hover:bg-white/90 text-slate-700 font-semibold gap-2"
-            onClick={onRecalibrate}
+            onClick={() => {
+              playClickSound();
+              onRecalibrate();
+            }}
           >
             <Settings className="w-5 h-5" />
             Calibrate
@@ -187,7 +196,10 @@ export const TrackingScreen = ({
 
           <Button
             className="h-14 px-8 rounded-xl bg-[#8B9CFF] hover:bg-[#7A8BEE] text-white font-semibold shadow-sm gap-2 min-w-[120px]"
-            onClick={onTogglePause}
+            onClick={() => {
+              playClickSound();
+              onTogglePause();
+            }}
           >
             {isTracking ? (
               <>
@@ -206,7 +218,13 @@ export const TrackingScreen = ({
 
       {/* Main Grid Area */}
       <div className="flex-1 w-full bg-white rounded-3xl shadow-sm p-4 md:p-6 overflow-hidden">
-        <GazeGrid activeZone={gazeZone} onExit={onRecalibrate} onSelectText={handleSelectText} selectedText={selectedText} />
+        <GazeGrid
+          activeZone={gazeZone}
+          onExit={onStop}
+          onSelectText={handleSelectText}
+          selectedText={selectedText}
+          usePictograms={usePictograms}
+        />
       </div>
 
       {/* Footer Branding */}

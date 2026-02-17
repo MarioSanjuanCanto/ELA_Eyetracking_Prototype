@@ -11,15 +11,15 @@ interface CalibrationScreenProps {
 }
 
 const calibrationPoints = [
-  { x: 10, y: 10 },
-  { x: 50, y: 10 },
-  { x: 90, y: 10 },
+  { x: 10, y: 20 },
+  { x: 50, y: 20 },
+  { x: 90, y: 20 },
   { x: 10, y: 50 },
   { x: 50, y: 50 },
   { x: 90, y: 50 },
-  { x: 10, y: 90 },
-  { x: 50, y: 90 },
-  { x: 90, y: 90 },
+  { x: 10, y: 80 },
+  { x: 50, y: 80 },
+  { x: 90, y: 80 },
 ];
 
 const DWELL_TIME = 2000; // 2 seconds

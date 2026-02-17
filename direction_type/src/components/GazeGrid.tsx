@@ -2,47 +2,91 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { phrases, CATEGORY_MAP } from "@/lib/phrases";
+import { playClickSound } from "@/lib/sounds";
 
 interface GazeGridProps {
   activeZone: { row: string; col: string } | null;
   onExit?: () => void;
   onSelectText?: (text: string, isPhrase?: boolean) => void;
   selectedText: string;
+  usePictograms?: boolean;
 }
 
 const mainGrid = [
   [
     { label: "Saludos", type: "default" },
-    { label: "Despedidas", type: "default" },
+    { label: "Preguntas", type: "default" },
     { label: "Frases Importantes", type: "default" },
   ],
   [
-    { label: "Preguntas", type: "default" },
-    { label: "ENVIAR", type: "action" },
-    { label: "Control del entorno", type: "default" },
-  ],
-  [
     { label: "TECLADO", type: "default" },
-    { label: "Necesidades", type: "default" },
+    { label: "ENVIAR", type: "action" },
     { label: "Emergencias", type: "danger" },
   ],
 ];
 
-const keyboardGridCells = [
+// Top level keyboard menu
+// Layout:
+// [VOCALES] [CONSONANTES] [AI SUGGESTIONS]
+// [ESPACIO] [BORRAR]      [ATRÁS]
+const keyboardMainGrid = [
   [
-    { label: "ABC", type: "default" },
-    { label: "DEF", type: "default" },
-    { label: "GHI", type: "default" },
+    { label: "VOCALES", type: "default" },
+    { label: "CONSONANTES", type: "default" },
+    { label: "Sugerencias de AI", type: "default" },
   ],
   [
-    { label: "JKL", type: "default" },
+    { label: "ESPACIO", type: "success" },
+    { label: "BORRAR", type: "danger" },
     { label: "[ATRÁS]", type: "action" },
-    { label: "MNO", type: "default" },
+  ],
+];
+
+// Sub-menu for Vowels (Direct Access)
+// A E I
+// O U [ATRÁS]
+const keyboardVowelsGrid = [
+  [
+    { label: "A", type: "default" },
+    { label: "E", type: "default" },
+    { label: "I", type: "default" },
   ],
   [
-    { label: "PQR", type: "default" },
-    { label: "STU", type: "default" },
-    { label: "VWXYZ", type: "default" },
+    { label: "O", type: "default" },
+    { label: "U", type: "default" },
+    { label: "[ATRÁS]", type: "action" },
+  ],
+];
+
+// Sub-menu for All Consonants Groups
+// [B-G] [H-L] [M-Q]
+// [R-W] [X-Z] [ATRÁS]
+const keyboardConsonantsGrid = [
+  [
+    { label: "B-G", type: "default" },
+    { label: "H-L", type: "default" },
+    { label: "M-Q", type: "default" },
+  ],
+  [
+    { label: "R-W", type: "default" },
+    { label: "X-Z", type: "default" },
+    { label: "[ATRÁS]", type: "action" },
+  ],
+];
+
+// AI Suggestions Grid
+// [-] [-] [-]
+// [-] [REFRESCAR] [ATRÁS]
+const aiSuggestionsGrid = [
+  [
+    { label: "-", type: "default" },
+    { label: "-", type: "default" },
+    { label: "-", type: "default" },
+  ],
+  [
+    { label: "-", type: "default" },
+    { label: "REFRESCAR", type: "action" },
+    { label: "[ATRÁS]", type: "action" },
   ],
 ];
 
@@ -53,6 +97,7 @@ const DwellButton = ({
   onAction,
   isDisabled = false,
   className,
+  iconPath,
 }: {
   label: string;
   type: string;
@@ -60,6 +105,7 @@ const DwellButton = ({
   onAction: (label: string) => void;
   isDisabled?: boolean;
   className?: string;
+  iconPath?: string;
 }) => {
   const { toast } = useToast();
   const [progress, setProgress] = useState(0);
@@ -166,7 +212,17 @@ const DwellButton = ({
         isDisabled && "opacity-50 hover:opacity-50 hover:shadow-none"
       )}
     >
-      <span className="relative z-10">{label}</span>
+      {iconPath ? (
+        <div className="relative z-10 w-full h-full flex items-center justify-center p-2">
+          <img
+            src={iconPath}
+            alt={label}
+            className="max-w-full max-h-full object-contain drop-shadow-sm"
+          />
+        </div>
+      ) : (
+        <span className="relative z-10">{label}</span>
+      )}
 
       {progress > 0 && (
         <div className={cn(
@@ -204,23 +260,21 @@ const DwellButton = ({
 };
 
 const KEYBOARD_LETTERS: Record<string, string[]> = {
-  "ABC": ["A", "B", "C"],
-  "DEF": ["D", "E", "F"],
-  "GHI": ["G", "H", "I"],
-  "JKL": ["J", "K", "L"],
-  "MNO": ["M", "N", "O"],
-  "PQR": ["P", "Q", "R"],
-  "STU": ["S", "T", "U"],
-  "VWXYZ": ["V", "W", "X", "Y", "Z"],
+  "B-G": ["B", "C", "D", "F", "G"],
+  "H-L": ["H", "J", "K", "L"],
+  "M-Q": ["M", "N", "Ñ", "P", "Q"],
+  "R-W": ["R", "S", "T", "V", "W"],
+  "X-Z": ["X", "Y", "Z"],
 };
 
-export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: GazeGridProps) => {
-  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation">("main");
+export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText, usePictograms }: GazeGridProps) => {
+  const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation" | "keyboardVowels" | "keyboardConsonants" | "aiSuggestions">("main");
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [selectedKeyboardGroup, setSelectedKeyboardGroup] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleAction = (label: string) => {
+    playClickSound();
     if (label === "ENVIAR") {
       if (selectedText.trim()) {
         setViewState("confirmation");
@@ -239,15 +293,26 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return;
     }
 
-    if (label === "WAIT") {
+    if (label === "REFRESCAR") {
+      toast({
+        title: "Refreshed",
+        description: "Loading new suggestions...",
+        className: "bg-blue-500 text-white font-bold",
+      });
+      return;
+    }
+
+    if (label === "WAIT" || label === "-") {
       // Do nothing
       return;
     }
 
     if (label === "[ATRÁS]") {
       if (viewState === "keyboardLetters") {
-        setViewState("keyboard");
+        setViewState("keyboardConsonants");
         setSelectedKeyboardGroup(null);
+      } else if (viewState === "keyboardVowels" || viewState === "keyboardConsonants" || viewState === "aiSuggestions") {
+        setViewState("keyboard");
       } else {
         setViewState("main");
         setCurrentCategory(null);
@@ -255,11 +320,26 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return;
     }
 
-    // Update text bar for non-keyboard options
-    if (label !== "TECLADO" && label !== "-" && onSelectText) {
+    // Update text bar for non-keypad options related to text
+    if (label === "ESPACIO") {
+      if (onSelectText) onSelectText(" ", false);
+      return;
+    }
+    if (label === "BORRAR") {
+      if (onSelectText) onSelectText("BORRAR", false);
+      return;
+    }
+
+    // Handle direct vowel selection
+    if (["A", "E", "I", "O", "U"].includes(label)) {
+      if (onSelectText) onSelectText(label, false);
+      return;
+    }
+
+    if (label !== "TECLADO" && label !== "VOCALES" && label !== "CONSONANTES" && label !== "Sugerencias de AI" && !Object.keys(KEYBOARD_LETTERS).includes(label) && onSelectText) {
       if (viewState === "keyboardLetters") {
         onSelectText(label, false);
-      } else if (viewState !== "keyboard" && viewState !== "main") {
+      } else if (viewState !== "keyboard" && viewState !== "keyboardVowels" && viewState !== "keyboardConsonants" && viewState !== "main") {
         // If it's a category phrase, we want to replace the current text
         onSelectText(label, true);
       }
@@ -273,6 +353,14 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
         setCurrentCategory(label);
       }
     } else if (viewState === "keyboard") {
+      if (label === "VOCALES") {
+        setViewState("keyboardVowels");
+      } else if (label === "CONSONANTES") {
+        setViewState("keyboardConsonants");
+      } else if (label === "Sugerencias de AI") {
+        setViewState("aiSuggestions");
+      }
+    } else if (viewState === "keyboardConsonants") {
       if (KEYBOARD_LETTERS[label]) {
         setSelectedKeyboardGroup(label);
         setViewState("keyboardLetters");
@@ -288,46 +376,51 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
 
   const getGridItems = () => {
     if (viewState === "main") return mainGrid;
-    if (viewState === "keyboard") return keyboardGridCells;
+    if (viewState === "keyboard") return keyboardMainGrid;
+    if (viewState === "keyboardVowels") return keyboardVowelsGrid;
+    if (viewState === "keyboardConsonants") return keyboardConsonantsGrid;
+    if (viewState === "aiSuggestions") return aiSuggestionsGrid;
 
     if (viewState === "keyboardLetters" && selectedKeyboardGroup) {
       const letters = KEYBOARD_LETTERS[selectedKeyboardGroup] || [];
-      const items: { label: string; type: string }[][] = [[], [], []];
+      const items: { label: string; type: string }[][] = [[], []];
+
+      // 2x3 Grid: 6 slots.
+      // Slot (1, 2) is Always Back.
+      // 5 Slots for letters.
       let letterIdx = 0;
-      for (let r = 0; r < 3; r++) {
+      for (let r = 0; r < 2; r++) {
         for (let c = 0; c < 3; c++) {
-          if (r === 1 && c === 1) {
+          if (r === 1 && c === 2) {
             items[r][c] = { label: "[ATRÁS]", type: "action" };
-          } else if (r === 2 && c === 0) {
-            items[r][c] = { label: "ESPACIO", type: "success" };
-          } else if (r === 2 && c === 2) {
-            items[r][c] = { label: "BORRAR", type: "danger" };
-          } else if (letterIdx < letters.length) {
-            items[r][c] = { label: letters[letterIdx], type: "default" };
-            letterIdx++;
           } else {
-            items[r][c] = { label: "-", type: "default" };
+            if (letterIdx < letters.length) {
+              items[r][c] = { label: letters[letterIdx], type: "default" };
+              letterIdx++;
+            } else {
+              items[r][c] = { label: "-", type: "disabled" };
+            }
           }
         }
       }
       return items;
     }
 
-    // Create 3x3 grid for category phrases
+    // Create 2x3 grid for category phrases
     if (viewState === "category" && currentCategory) {
       const key = CATEGORY_MAP[currentCategory];
       const categoryPhrases = phrases[key] || [];
-      const items: { label: string; type: string }[][] = [[], [], []];
+      const items: { label: string; type: string }[][] = [[], []];
 
-      // We have 8 slots (center is back)
+      // 6 slots. (1, 2) is Back. 5 phrases max.
       let phraseIdx = 0;
-      for (let r = 0; r < 3; r++) {
+      for (let r = 0; r < 2; r++) {
         for (let c = 0; c < 3; c++) {
-          if (r === 1 && c === 1) {
+          if (r === 1 && c === 2) {
             items[r][c] = { label: "[ATRÁS]", type: "action" };
           } else {
             const phrase = categoryPhrases[phraseIdx] || "-";
-            items[r][c] = { label: phrase, type: "default" };
+            items[r][c] = { label: phrase, type: phrase === "-" ? "disabled" : "default" };
             phraseIdx++;
           }
         }
@@ -350,6 +443,14 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
 
   const gridItems = getGridItems();
 
+  const PICTOGRAM_MAP: Record<string, string> = {
+    "Saludos": "/pictogramas/Saludo.png",
+    "Preguntas": "/pictogramas/Preguntas.png",
+    "Frases Importantes": "/pictogramas/FrasesImportantes.png",
+    "TECLADO": "/pictogramas/Teclado.png",
+    "Emergencias": "/pictogramas/Emergencias.png",
+  };
+
   const isActive = (row: number, col: number) => {
     if (!activeZone) return false;
 
@@ -363,10 +464,16 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       return colMatch;
     }
 
-    const rowMatch =
-      (activeZone.row === "up" && row === 0) ||
-      (activeZone.row === "middle" && row === 1) ||
-      (activeZone.row === "down" && row === 2);
+    // Map active zones to 2 rows
+    // Up -> Row 0
+    // Down -> Row 1
+
+    let targetRow = -1;
+    if (activeZone.row === "up") targetRow = 0;
+    if (activeZone.row === "down") targetRow = 1;
+
+    const rowMatch = row === targetRow;
+
     const colMatch =
       (activeZone.col === "left" && col === 0) ||
       (activeZone.col === "center" && col === 1) ||
@@ -375,21 +482,16 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
   };
 
   const getAlignmentClass = (rowIndex: number, colIndex: number) => {
-    // Confirmation view or special cases could stay centered
+    // Confirmation view
     if (viewState === "confirmation") return "items-center justify-center";
 
-    // Center cell always centered
-    if (rowIndex === 1 && colIndex === 1) return "items-center justify-center";
-
-    // Vertical alignment
+    // 2x3 Grid Alignment
     const isTop = rowIndex === 0;
-    const isBottom = rowIndex === 2;
 
-    // Horizontal alignment
     const isLeft = colIndex === 0;
     const isRight = colIndex === 2;
 
-    const vClass = isTop ? "items-start pt-8" : isBottom ? "items-end pb-8" : "items-center";
+    const vClass = isTop ? "items-start pt-8" : "items-end pb-8";
     const hClass = isLeft ? "justify-start pl-8 text-left" : isRight ? "justify-end pr-8 text-right" : "justify-center text-center";
 
     return `${vClass} ${hClass}`;
@@ -406,11 +508,12 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
       )}
       <div className={cn(
         "grid gap-4 w-full",
-        viewState === "confirmation" ? "grid-cols-3 grid-rows-1 h-32 md:h-40" : "grid-cols-3 grid-rows-3 flex-1"
+        viewState === "confirmation" ? "grid-cols-3 grid-rows-1 h-32 md:h-40" : "grid-cols-3 grid-rows-2 flex-1"
       )}>
         {gridItems.map((row, rowIndex) =>
           row.map((item, colIndex) => {
-            const isBtnDisabled = item.label === "ENVIAR" && (!selectedText || !selectedText.trim());
+            const isBtnDisabled = (item.label === "ENVIAR" && (!selectedText || !selectedText.trim())) || item.type === "disabled";
+            const iconPath = usePictograms && viewState === "main" ? PICTOGRAM_MAP[item.label] : undefined;
             return (
               <DwellButton
                 key={`${viewState}-${currentCategory}-${rowIndex}-${colIndex}`}
@@ -420,6 +523,7 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
                 onAction={(lbl) => !isBtnDisabled && handleAction(lbl)}
                 isDisabled={isBtnDisabled}
                 className={getAlignmentClass(rowIndex, colIndex)}
+                iconPath={iconPath}
               />
             );
           })

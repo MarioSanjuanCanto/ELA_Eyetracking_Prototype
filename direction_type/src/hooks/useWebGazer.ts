@@ -6,7 +6,7 @@ export interface GazePosition {
 }
 
 export interface GazeZone {
-  row: "up" | "middle" | "down";
+  row: "up" | "down";
   col: "left" | "center" | "right";
 }
 
@@ -40,7 +40,7 @@ const HEAD_STILL_EPSILON = 1.5;
 
 // Compensation factor: Shift gaze per pixel of head movement.
 // Positive value = if head moves Right, shift Gaze Right.
-const HEAD_COMPENSATION_FACTOR = 3.5;
+const HEAD_COMPENSATION_FACTOR = 4.2; // Aumentado para mayor sensibilidad en bordes
 
 export const useWebGazer = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -92,9 +92,9 @@ export const useWebGazer = () => {
     else if (x < (2 * width) / 3) col = "center";
     else col = "right";
 
-    let row: "up" | "middle" | "down";
-    if (y < height / 3) row = "up";
-    else if (y < (2 * height) / 3) row = "middle";
+    let row: "up" | "down";
+    // Split screen vertically in half for 2-row layout
+    if (y < height / 2) row = "up";
     else row = "down";
 
     return { row, col };
@@ -259,6 +259,12 @@ export const useWebGazer = () => {
 
                   if (frameDelta < HEAD_STILL_EPSILON) {
                     hs.stableCount++;
+                    // "Elastic Anchor": El ancla sigue a la cara muy sutilmente si estás quieto
+                    // Esto absorbe minidesviaciones sin saltos bruscos.
+                    if (faceAnchorRef.current) {
+                      faceAnchorRef.current.x = faceAnchorRef.current.x * 0.998 + faceCenter.x * 0.002;
+                      faceAnchorRef.current.y = faceAnchorRef.current.y * 0.998 + faceCenter.y * 0.002;
+                    }
                   } else {
                     hs.stableCount = 0;
                     hs.hasRecalibrated = false;
@@ -297,7 +303,11 @@ export const useWebGazer = () => {
 
   const stop = useCallback(() => {
     if (webgazerRef.current) {
-      webgazerRef.current.end();
+      try {
+        webgazerRef.current.end();
+      } catch (e) {
+        console.warn("Error stopping WebGazer:", e);
+      }
       webgazerRef.current = null;
       setIsTracking(false);
       setGazePosition(null);

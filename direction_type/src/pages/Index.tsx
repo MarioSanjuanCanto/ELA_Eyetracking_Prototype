@@ -8,6 +8,7 @@ type AppState = "welcome" | "calibrating" | "tracking";
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>("welcome");
+  const [usePictograms, setUsePictograms] = useState(false);
   const {
     isLoading,
     isTracking,
@@ -53,7 +54,13 @@ const Index = () => {
   }, [stop]);
 
   if (appState === "welcome") {
-    return <WelcomeScreen onStart={handleStart} />;
+    return (
+      <WelcomeScreen
+        onStart={handleStart}
+        usePictograms={usePictograms}
+        onTogglePictograms={() => setUsePictograms(!usePictograms)}
+      />
+    );
   }
 
   if (appState === "calibrating") {
@@ -75,6 +82,7 @@ const Index = () => {
       onRecalibrate={handleRecalibrate}
       onTogglePause={handleTogglePause}
       onStop={handleStop}
+      usePictograms={usePictograms}
     />
   );
 };
