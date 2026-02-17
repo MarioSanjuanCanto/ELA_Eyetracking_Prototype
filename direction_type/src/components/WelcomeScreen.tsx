@@ -1,11 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Eye, Camera, MousePointer, ScanEye } from "lucide-react";
 
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Image as ImageIcon } from "lucide-react";
+
 interface WelcomeScreenProps {
   onStart: () => void;
+  usePictograms: boolean;
+  onTogglePictograms: () => void;
 }
 
-export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
+export const WelcomeScreen = ({ onStart, usePictograms, onTogglePictograms }: WelcomeScreenProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F2F6FA] to-[#E3EBF5] grid-bg flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Decorative ambient blobs */}
@@ -57,6 +63,23 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
                 <h3 className="font-semibold text-slate-800">Smart Calibration</h3>
                 <p className="text-sm text-slate-500">9-point precision grid</p>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50/50 border border-slate-100 transition-colors duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                  <ImageIcon className="w-5 h-5 text-slate-600" />
+                </div>
+                <div className="flex flex-col">
+                  <Label htmlFor="pictograms-mode" className="font-semibold text-slate-800 cursor-pointer">Pictograms</Label>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Visual Mode</span>
+                </div>
+              </div>
+              <Switch
+                id="pictograms-mode"
+                checked={usePictograms}
+                onCheckedChange={onTogglePictograms}
+              />
             </div>
           </div>
 

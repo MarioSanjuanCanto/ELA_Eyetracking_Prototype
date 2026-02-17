@@ -9,6 +9,7 @@ interface GazeGridProps {
   onExit?: () => void;
   onSelectText?: (text: string, isPhrase?: boolean) => void;
   selectedText: string;
+  usePictograms?: boolean;
 }
 
 const mainGrid = [
@@ -96,6 +97,7 @@ const DwellButton = ({
   onAction,
   isDisabled = false,
   className,
+  iconPath,
 }: {
   label: string;
   type: string;
@@ -103,6 +105,7 @@ const DwellButton = ({
   onAction: (label: string) => void;
   isDisabled?: boolean;
   className?: string;
+  iconPath?: string;
 }) => {
   const { toast } = useToast();
   const [progress, setProgress] = useState(0);
@@ -209,7 +212,17 @@ const DwellButton = ({
         isDisabled && "opacity-50 hover:opacity-50 hover:shadow-none"
       )}
     >
-      <span className="relative z-10">{label}</span>
+      {iconPath ? (
+        <div className="relative z-10 w-full h-full flex items-center justify-center p-2">
+          <img
+            src={iconPath}
+            alt={label}
+            className="max-w-full max-h-full object-contain drop-shadow-sm"
+          />
+        </div>
+      ) : (
+        <span className="relative z-10">{label}</span>
+      )}
 
       {progress > 0 && (
         <div className={cn(
@@ -254,7 +267,7 @@ const KEYBOARD_LETTERS: Record<string, string[]> = {
   "X-Z": ["X", "Y", "Z"],
 };
 
-export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: GazeGridProps) => {
+export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText, usePictograms }: GazeGridProps) => {
   const [viewState, setViewState] = useState<"main" | "keyboard" | "category" | "keyboardLetters" | "confirmation" | "keyboardVowels" | "keyboardConsonants" | "aiSuggestions">("main");
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [selectedKeyboardGroup, setSelectedKeyboardGroup] = useState<string | null>(null);
@@ -430,6 +443,14 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
 
   const gridItems = getGridItems();
 
+  const PICTOGRAM_MAP: Record<string, string> = {
+    "Saludos": "/pictogramas/Saludo.png",
+    "Preguntas": "/pictogramas/Preguntas.png",
+    "Frases Importantes": "/pictogramas/FrasesImportantes.png",
+    "TECLADO": "/pictogramas/Teclado.png",
+    "Emergencias": "/pictogramas/Emergencias.png",
+  };
+
   const isActive = (row: number, col: number) => {
     if (!activeZone) return false;
 
@@ -492,6 +513,7 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
         {gridItems.map((row, rowIndex) =>
           row.map((item, colIndex) => {
             const isBtnDisabled = (item.label === "ENVIAR" && (!selectedText || !selectedText.trim())) || item.type === "disabled";
+            const iconPath = usePictograms && viewState === "main" ? PICTOGRAM_MAP[item.label] : undefined;
             return (
               <DwellButton
                 key={`${viewState}-${currentCategory}-${rowIndex}-${colIndex}`}
@@ -501,6 +523,7 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText }: Gaz
                 onAction={(lbl) => !isBtnDisabled && handleAction(lbl)}
                 isDisabled={isBtnDisabled}
                 className={getAlignmentClass(rowIndex, colIndex)}
+                iconPath={iconPath}
               />
             );
           })
