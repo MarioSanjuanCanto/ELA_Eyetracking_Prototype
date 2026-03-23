@@ -1,11 +1,19 @@
-
-#TODO: Gitlab - con lfs
+#Métodos base de datos:
+    borrar
 
 #TODO: Fine tunning idiomas - mirar datasets 
 
+    El fine tuning es para que se parezca a una voz, no se puede hacer un modelo multivoz de un nuevo idioma
+    Mi idea es hacer por cada paciente probar a hacerle al modelo fine tuning de otro idioma
+    Muy caro entrenar --> en mi ordenador tarda mucho y me ocupó 80GB de memoria
+
 #TODO: Emociones del audio 
 
+
 #TODO: Prosodia del usuario
+
+
+
 
 
 

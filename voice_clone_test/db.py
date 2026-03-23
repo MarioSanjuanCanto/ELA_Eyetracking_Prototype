@@ -39,7 +39,17 @@ class ReferenceManager:
                 "INSERT INTO recordings (id, patient_name, transcription, audio_path) VALUES (?, ?, ?, ?)",
                 (rec_id, patient_name, transcription, dest_path)
             )
+        print("[db][add_reference] Reference added.")
         return rec_id
+
+    def remove_reference_by_id(self, id):
+        print("[db][remove_reference_by_id] Removing reference...")
+        # Remove reference from DB
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("DELETE FROM recordings WHERE id = ?", (id,))
+        # Remove audio file
+        os.remove(os.path.join(self.storage_dir, f"{id}.wav"))
+        print("[db][remove_reference_by_id] Reference removed.")
 
     def get_patient_records(self, patient_name):
         print("[db][get_patient_records] Getting patient records...")
@@ -55,8 +65,8 @@ class ReferenceManager:
             cursor = conn.execute("SELECT * FROM recordings WHERE id = ?", (id,))
             return dict(cursor.fetchone())
 
-    def list_information(self):
-        print("[db][list_information] Listing information...")
+    def list_patients(self):
+        print("[db][list_patients] Listing patients...")
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.execute("SELECT * FROM recordings")

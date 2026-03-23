@@ -77,6 +77,36 @@ def clear_runtime_memory():
         torch.mps.empty_cache()
     print("[voice_clone][clear_runtime_memory] Done.")
 
+# _________________________ Access to Database _________________________ 
+
+def add_reference(patient_name, audio_path, transcription):
+    print("[voice_clone][add_reference] Adding reference...")
+    ref = db.ReferenceManager()
+    ref.add_reference(patient_name, audio_path, transcription)
+    print("[voice_clone][add_reference] Reference added.")
+
+def get_reference(patient_name):
+    print("[voice_clone][get_reference] Getting reference...")
+    ref = db.ReferenceManager()
+    return ref.get_patient_records(patient_name)
+
+def list_references():
+    print("[voice_clone][list_references] Listing references...")
+    ref = db.ReferenceManager()
+
+    result = ref.list_patients()
+
+    for i, patient in enumerate(result):
+        print("[" + str(i) + "] : " + patient["id"] + " - " + patient["patient_name"])
+
+    return result
+
+def delete_reference(id):
+    print("[voice_clone][delete_reference] Deleting reference...")
+    ref = db.ReferenceManager()
+    ref.remove_reference_by_id(id)
+    print("[voice_clone][delete_reference] Reference deleted.")
+
 # _________________________ Emotions Test _________________________ 
 
 def emotions_test(audio_path, audio_transcription):
@@ -95,7 +125,8 @@ def emotions_test(audio_path, audio_transcription):
         play_audio(path)
 
 # _________________________ Debug Functions _________________________ 
-def debug_generate_audio(patient_name, text):
+
+def debug_generate_audio(patient_name, language ,text):
     '''
     Generate audio for debugging
     '''
@@ -104,12 +135,13 @@ def debug_generate_audio(patient_name, text):
     ref = db.ReferenceManager()
     data = ref.get_patient_records(patient_name)[0]
     prompt_items = generate_prompt(model, data["audio_path"], data["transcription"])
-    audio_path = generate_audio(text, "Spanish", model, prompt_items)
+    audio_path = generate_audio(text, language, model, prompt_items)
     play_audio(audio_path)
 
 if __name__ == "__main__":
     #debug_generate_audio("Fran Vivó", "Este es un audio de prueba, a ver que tal sale")
-    clear_runtime_memory()
-   
-
+    #debug_generate_audio("Nuria López", "Bon dia, hui és un dia preciós i tinc moltes ganes d’aprendre coses noves i continuar millorant cada dia.")
+    #debug_generate_audio("Fran Vivó Valenciano", "Italian","Hui fa un dia molt tranquil i agradable. M’agrada caminar pel parc mentre escolte els sons de la ciutat i sent l’aire fresc a la cara. De vegades pense en tots els projectes que vull fer en el futur, i això em dona molta motivació per continuar aprenent i millorant cada dia.")
+    debug_generate_audio("Fran Vivó Valenciano", "Spanish","Aquesta vesprada, a la vora de la mar blava, el xiquet jugava amb una pilota mentre la seua àvia li contava una història antiga.")
+    
     
