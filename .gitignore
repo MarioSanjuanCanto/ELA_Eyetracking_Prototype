@@ -22,3 +22,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Virtual environments
+venv/
+.venv/
+env/
+bin/
+Include/
+lib/
+lib64/
+share/
+pyvenv.cfg
+
+voice_clone_test/venv/
+voice_clone_test/.venv/
+voice_clone_test/models/
+voice_clone_test/outputs/
+*.safetensors
+__pycache__/

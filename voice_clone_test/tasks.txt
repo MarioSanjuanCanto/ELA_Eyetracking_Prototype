@@ -1,0 +1,11 @@
+
+#TODO: Gitlab - con lfs
+
+#TODO: Fine tunning idiomas - mirar datasets 
+
+#TODO: Emociones del audio 
+
+#TODO: Prosodia del usuario
+
+
+

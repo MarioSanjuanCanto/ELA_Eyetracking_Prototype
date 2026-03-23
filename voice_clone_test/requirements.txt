@@ -1,0 +1,8 @@
+torch
+soundfile
+numpy
+librosa
+transformers
+requests
+qwen-tts
+# flash-attn  <-- (Opcional, requiere compilación local en Mac)
