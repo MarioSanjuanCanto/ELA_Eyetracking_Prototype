@@ -41,7 +41,7 @@ def generate_prompt(model, ref_audio: str, ref_text: str):
         )
     return prompt_items
 
-def generate_audio(text, language, model, prompt_items):
+def generate_audio(text, language, model, prompt_items, name=""):
     '''
     Generate audio from text
     '''
@@ -56,7 +56,11 @@ def generate_audio(text, language, model, prompt_items):
             voice_clone_prompt=prompt_items,
         )
 
-    name = f"voice_{uuid.uuid4()}.wav"
+    if name == "" or name is None:
+        name = f"voice_{uuid.uuid4()}.wav"
+    else:
+        name = name + ".wav"
+
     path = os.path.join(output_dir, name)
     sf.write(path, wavs[0], sr)
 
@@ -107,6 +111,35 @@ def delete_reference(id):
     ref.remove_reference_by_id(id)
     print("[voice_clone][delete_reference] Reference deleted.")
 
+def update_reference(id, patient_name, transcription, audio_path):
+    print("[voice_clone][update_reference] Updating reference...")
+    ref = db.ReferenceManager()
+    ref.update_reference(id, patient_name, transcription, audio_path)
+    print("[voice_clone][update_reference] Reference updated.")
+
+def add_prosody(patient_id, prosody_prompt):
+    print("[voice_clone][add_prosody] Adding prosody...")
+    ref = db.ReferenceManager()
+    ref.add_prosody(patient_id, prosody_prompt)
+    print("[voice_clone][add_prosody] Prosody added.")
+
+def get_prosody(patient_id):
+    print("[voice_clone][get_prosody] Getting prosody...")
+    ref = db.ReferenceManager()
+    return ref.get_prosody(patient_id)
+
+def update_prosody(patient_id, prosody_prompt):
+    print("[voice_clone][update_prosody] Updating prosody...")
+    ref = db.ReferenceManager()
+    ref.update_prosody(patient_id, prosody_prompt)
+    print("[voice_clone][update_prosody] Prosody updated.")
+
+def remove_prosody(patient_id):
+    print("[voice_clone][remove_prosody] Removing prosody...")
+    ref = db.ReferenceManager()
+    ref.remove_prosody(patient_id)
+    print("[voice_clone][remove_prosody] Prosody removed.")
+
 # _________________________ Emotions Test _________________________ 
 
 def emotions_test(audio_path, audio_transcription):
@@ -126,22 +159,20 @@ def emotions_test(audio_path, audio_transcription):
 
 # _________________________ Debug Functions _________________________ 
 
-def debug_generate_audio(patient_name, language ,text):
+def debug_generate_audio(model, patient_name, language ,text, name=""):
     '''
     Generate audio for debugging
     '''
     print("[voice_clone][debug_generate_audio] Starting debug generate audio...")
-    model = load_Qwen_model()
     ref = db.ReferenceManager()
     data = ref.get_patient_records(patient_name)[0]
     prompt_items = generate_prompt(model, data["audio_path"], data["transcription"])
-    audio_path = generate_audio(text, language, model, prompt_items)
+    audio_path = generate_audio(text, language, model, prompt_items, name)
     play_audio(audio_path)
 
 if __name__ == "__main__":
-    #debug_generate_audio("Fran Vivó", "Este es un audio de prueba, a ver que tal sale")
-    #debug_generate_audio("Nuria López", "Bon dia, hui és un dia preciós i tinc moltes ganes d’aprendre coses noves i continuar millorant cada dia.")
-    #debug_generate_audio("Fran Vivó Valenciano", "Italian","Hui fa un dia molt tranquil i agradable. M’agrada caminar pel parc mentre escolte els sons de la ciutat i sent l’aire fresc a la cara. De vegades pense en tots els projectes que vull fer en el futur, i això em dona molta motivació per continuar aprenent i millorant cada dia.")
-    debug_generate_audio("Fran Vivó Valenciano", "Spanish","Aquesta vesprada, a la vora de la mar blava, el xiquet jugava amb una pilota mentre la seua àvia li contava una història antiga.")
-    
+    #model = load_Qwen_model()
+    list_references()
+    #debug_generate_audio(model, "Fran Vivó", "Spanish", "Hui de matí, mentre el sol començava a il·luminar suaument els carrers del poble, vaig eixir a caminar prop del riu, escoltant el cant dels ocells i sentint una tranquil·litat profunda que em feia pensar en tots els projectes i somnis que encara vull aconseguir amb esforç, constància i il·lusió.", "Fran_test_1")
+    #debug_generate_audio(model, "Fran Vivó Valenciano", "Spanish", "Hui de matí, mentre el sol començava a il·luminar suaument els carrers del poble, vaig eixir a caminar prop del riu, escoltant el cant dels ocells i sentint una tranquil·litat profunda que em feia pensar en tots els projectes i somnis que encara vull aconseguir amb esforç, constància i il·lusió.", "Fran_test_2")
     

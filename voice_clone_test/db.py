@@ -23,6 +23,17 @@ class ReferenceManager:
                 )
             """)
 
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS prosody (
+                    patient_id TEXT PRIMARY KEY,
+                    prosody_prompt TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (patient_id) REFERENCES recordings(id)
+                )
+            """)
+
+
+    # __________________ recordings table __________________
     def add_reference(self, patient_name, original_audio_path, transcription):
         print("[db][add_reference] Adding reference...")
         # 1. Generar ID único
@@ -71,3 +82,54 @@ class ReferenceManager:
             conn.row_factory = sqlite3.Row
             cursor = conn.execute("SELECT * FROM recordings")
             return [dict(row) for row in cursor.fetchall()]
+
+    def update_reference(self, id, patient_name, transcription, audio_path):
+        print("[db][update_reference] Updating reference...")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "UPDATE recordings SET patient_name = ?, transcription = ?, audio_path = ? WHERE id = ?",
+                (patient_name, transcription, audio_path, id)
+            )
+        print("[db][update_reference] Reference updated.")
+
+    # __________________ prosody table __________________
+    
+    def add_prosody(self, patient_id, prosody_prompt):
+        print("[db][add_prosody] Adding prosody...")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "INSERT INTO prosody (patient_id, prosody_prompt) VALUES (?, ?)",
+                (patient_id, prosody_prompt)
+            )
+        print("[db][add_prosody] Prosody added.")
+
+    def get_prosody(self, patient_id):
+        print("[db][get_prosody] Getting prosody...")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("SELECT * FROM prosody WHERE patient_id = ?", (patient_id,))
+            return dict(cursor.fetchone())
+
+    def remove_prosody(self, patient_id):
+        print("[db][remove_prosody] Removing prosody...")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("DELETE FROM prosody WHERE patient_id = ?", (patient_id,))
+        print("[db][remove_prosody] Prosody removed.")
+
+    def list_prosody(self):
+        print("[db][list_prosody] Listing prosody...")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("SELECT * FROM prosody")
+            return [dict(row) for row in cursor.fetchall()]
+
+    def update_prosody(self, patient_id, prosody_prompt):
+        print("[db][update_prosody] Updating prosody...")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "UPDATE prosody SET prosody_prompt = ? WHERE patient_id = ?",
+                (prosody_prompt, patient_id)
+            )
+        print("[db][update_prosody] Prosody updated.")
+
+
