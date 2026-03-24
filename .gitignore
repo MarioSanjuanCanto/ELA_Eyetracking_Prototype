@@ -40,3 +40,8 @@ voice_clone_test/models/
 voice_clone_test/outputs/
 *.safetensors
 __pycache__/
+
+
+.env
+env
+**/.env

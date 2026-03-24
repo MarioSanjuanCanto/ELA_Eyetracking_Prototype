@@ -128,6 +128,14 @@ def get_prosody(patient_id):
     ref = db.ReferenceManager()
     return ref.get_prosody(patient_id)
 
+def list_prosodies():
+    print("[voice_clone][list_prosodies] Listing prosodies...")
+    ref = db.ReferenceManager()
+    result = ref.list_prosody()
+    for i, prosody in enumerate(result):
+        print("[" + str(i) + "] : " + prosody["patient_id"] + " - " + prosody["prosody_prompt"])
+    return result
+
 def update_prosody(patient_id, prosody_prompt):
     print("[voice_clone][update_prosody] Updating prosody...")
     ref = db.ReferenceManager()
@@ -172,7 +180,13 @@ def debug_generate_audio(model, patient_name, language ,text, name=""):
 
 if __name__ == "__main__":
     #model = load_Qwen_model()
-    list_references()
+    #list_references()
     #debug_generate_audio(model, "Fran Vivó", "Spanish", "Hui de matí, mentre el sol començava a il·luminar suaument els carrers del poble, vaig eixir a caminar prop del riu, escoltant el cant dels ocells i sentint una tranquil·litat profunda que em feia pensar en tots els projectes i somnis que encara vull aconseguir amb esforç, constància i il·lusió.", "Fran_test_1")
     #debug_generate_audio(model, "Fran Vivó Valenciano", "Spanish", "Hui de matí, mentre el sol començava a il·luminar suaument els carrers del poble, vaig eixir a caminar prop del riu, escoltant el cant dels ocells i sentint una tranquil·litat profunda que em feia pensar en tots els projectes i somnis que encara vull aconseguir amb esforç, constància i il·lusió.", "Fran_test_2")
     
+
+'''
+[0] : 4b9d2428-84b0-4503-8a7e-899bfeab1b13 - Fran Vivó
+[1] : 1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11 - Nuria López
+[2] : 48679e79-cc08-4e7b-9b52-6b3f6118910d - Fran Vivó Valenciano
+'''
