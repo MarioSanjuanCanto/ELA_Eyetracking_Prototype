@@ -5,6 +5,7 @@ import uuid
 import os
 import gc
 import utils.emotions as emotions
+import utils.prosody as prosody
 import subprocess
 import db
 
@@ -45,7 +46,7 @@ def generate_audio(text, language, model, prompt_items, name=""):
     '''
     Generate audio from text
     '''
-    print("[voice_clone][generate_audio] Generating audio...")
+    print(f"[voice_clone][generate_audio] Generating audio... {text}")
     output_dir = "outputs"
     os.makedirs(output_dir, exist_ok=True)
 
@@ -179,14 +180,36 @@ def debug_generate_audio(model, patient_name, language ,text, name=""):
     play_audio(audio_path)
 
 if __name__ == "__main__":
-    #model = load_Qwen_model()
+    model = load_Qwen_model()
     #list_references()
     #debug_generate_audio(model, "Fran Vivó", "Spanish", "Hui de matí, mentre el sol començava a il·luminar suaument els carrers del poble, vaig eixir a caminar prop del riu, escoltant el cant dels ocells i sentint una tranquil·litat profunda que em feia pensar en tots els projectes i somnis que encara vull aconseguir amb esforç, constància i il·lusió.", "Fran_test_1")
     #debug_generate_audio(model, "Fran Vivó Valenciano", "Spanish", "Hui de matí, mentre el sol començava a il·luminar suaument els carrers del poble, vaig eixir a caminar prop del riu, escoltant el cant dels ocells i sentint una tranquil·litat profunda que em feia pensar en tots els projectes i somnis que encara vull aconseguir amb esforç, constància i il·lusió.", "Fran_test_2")
-    
+    update_prosody("1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11",'''
+Eres un reescritor de estilo de habla. Transforma el texto al estilo de una mujer madrileña coloquial, directa y expresiva.
+
+REGLAS:
+- Cambios leves únicamente. No reformules frases, no cambies el significado ni el final del mensaje.
+- Terminaciones -ado/-ada → -ao/-á ("cansado" → "cansao", "llegada" → "llegá", "enfadada" → "enfadá").
+- Contracciones: "para" → "pa", "nada" → "ná.", "todo" → "tó.".
+- Alargamientos solo sobre palabras que ya existen en el texto, para dar énfasis donde sea natural ("pero" → "peeeero", "bueno" → "bueeeno").
+- No inventes cierres ni cambies el final del mensaje.
+- Si el texto ya suena natural, toca lo mínimo imprescindible.
+
+EJEMPLO:
+Input: "No sé si terminaremos a tiempo, pero lo intentaré."
+Output: "No sé si vamos a terminar a tiempo, peeeero lo intentaré."
+
+Devuelve solo el texto transformado, sin explicaciones.
+
+'''
+)
+    prosody_prompt = get_prosody("1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11").get("prosody_prompt","")
+    output = prosody.apply_prosody("Yo no he hecho nada y él lo ha hecho todo.", prosody_prompt)
+    debug_generate_audio(model, "Nuria López", "Spanish", output, "Nuria_test_3")
 
 '''
 [0] : 4b9d2428-84b0-4503-8a7e-899bfeab1b13 - Fran Vivó
 [1] : 1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11 - Nuria López
 [2] : 48679e79-cc08-4e7b-9b52-6b3f6118910d - Fran Vivó Valenciano
 '''
+
