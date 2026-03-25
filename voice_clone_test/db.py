@@ -32,7 +32,6 @@ class ReferenceManager:
                 )
             """)
 
-
     # __________________ recordings table __________________
     def add_reference(self, patient_name, original_audio_path, transcription):
         print("[db][add_reference] Adding reference...")

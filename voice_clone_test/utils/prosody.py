@@ -6,6 +6,9 @@ load_dotenv()
 
 
 def apply_prosody(text, prosody_prompt, model="gpt-4o-mini"):
+    '''
+    Use the user's prosody to change the text
+    '''
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     prompt = str(prosody_prompt) + "\nOBLIGATORIO: Responde solo con el texto modificado, sin explicaciones ni nada extra. \nTexto: { " + str(text) + " }"

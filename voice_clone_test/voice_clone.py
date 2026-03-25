@@ -85,17 +85,26 @@ def clear_runtime_memory():
 # _________________________ Access to Database _________________________ 
 
 def add_reference(patient_name, audio_path, transcription):
+    '''
+    Add entry in the database with the patient's name, audio file path and the transcript for the audio.
+    '''
     print("[voice_clone][add_reference] Adding reference...")
     ref = db.ReferenceManager()
     ref.add_reference(patient_name, audio_path, transcription)
     print("[voice_clone][add_reference] Reference added.")
 
 def get_reference(patient_name):
+    '''
+    Get an entry from the database
+    '''
     print("[voice_clone][get_reference] Getting reference...")
     ref = db.ReferenceManager()
     return ref.get_patient_records(patient_name)
 
 def list_references():
+    '''
+    List patients and ids in the database
+    '''
     print("[voice_clone][list_references] Listing references...")
     ref = db.ReferenceManager()
 
@@ -107,29 +116,44 @@ def list_references():
     return result
 
 def delete_reference(id):
+    '''
+    Delete an entry from the database
+    '''
     print("[voice_clone][delete_reference] Deleting reference...")
     ref = db.ReferenceManager()
     ref.remove_reference_by_id(id)
     print("[voice_clone][delete_reference] Reference deleted.")
 
 def update_reference(id, patient_name, transcription, audio_path):
+    '''
+    Update information in the database
+    '''
     print("[voice_clone][update_reference] Updating reference...")
     ref = db.ReferenceManager()
     ref.update_reference(id, patient_name, transcription, audio_path)
     print("[voice_clone][update_reference] Reference updated.")
 
 def add_prosody(patient_id, prosody_prompt):
+    '''
+    Add user's prosody
+    '''
     print("[voice_clone][add_prosody] Adding prosody...")
     ref = db.ReferenceManager()
     ref.add_prosody(patient_id, prosody_prompt)
     print("[voice_clone][add_prosody] Prosody added.")
 
 def get_prosody(patient_id):
+    '''
+    Get a prosody entry from the database
+    '''
     print("[voice_clone][get_prosody] Getting prosody...")
     ref = db.ReferenceManager()
     return ref.get_prosody(patient_id)
 
 def list_prosodies():
+    '''
+    List the user's prosodies in the database
+    '''
     print("[voice_clone][list_prosodies] Listing prosodies...")
     ref = db.ReferenceManager()
     result = ref.list_prosody()
@@ -138,12 +162,18 @@ def list_prosodies():
     return result
 
 def update_prosody(patient_id, prosody_prompt):
+    '''
+    Update user's prosody in the database
+    '''
     print("[voice_clone][update_prosody] Updating prosody...")
     ref = db.ReferenceManager()
     ref.update_prosody(patient_id, prosody_prompt)
     print("[voice_clone][update_prosody] Prosody updated.")
 
 def remove_prosody(patient_id):
+    '''
+    Remove a prosody entry from the database
+    '''
     print("[voice_clone][remove_prosody] Removing prosody...")
     ref = db.ReferenceManager()
     ref.remove_prosody(patient_id)
@@ -153,16 +183,22 @@ def remove_prosody(patient_id):
 
 def emotions_test(patient_name, text):
     '''
-    Test adding emotions to text
+    Test adding emotions (rythm) to text
     '''
     print("[voice_clone][emotions_test] Starting emotions test...")
+    
+    #Loading model
     model = load_Qwen_model()
-    print("[voice_clone][emotions_test] Generating prompt")
+    #Loading database connector
     ref = db.ReferenceManager()
     data = ref.get_patient_records(patient_name)[0]
+    #Generating prompt
     prompt_items = generate_prompt(model, data["audio_path"], data["transcription"])
-    print("[voice_clone][emotions_test] Generating prompt with emotions")
+    
+    #Add the rythm to the text
     text_with_emotions = emotions.get_debug_examples(text)
+
+    # Generate each audio
     for rhythm, text in text_with_emotions.items():
         print("[emotion_test] Generando audio con emoción: ", rhythm, " / ", text)
         path = generate_audio(text, "Spanish", model, prompt_items)
@@ -175,21 +211,25 @@ def debug_generate_audio(model, patient_name, language ,text, name=""):
     Generate audio for debugging
     '''
     print("[voice_clone][debug_generate_audio] Starting debug generate audio...")
+    # Get patient data from database
     ref = db.ReferenceManager()
     data = ref.get_patient_records(patient_name)[0]
+    #Generate the prompt items for the model
     prompt_items = generate_prompt(model, data["audio_path"], data["transcription"])
+    #Generate the audio with the cloned voice
     audio_path = generate_audio(text, language, model, prompt_items, name)
+    #Play the audio
     play_audio(audio_path)
 
 if __name__ == "__main__":
     model = load_Qwen_model()
     
-    input_text = "Hola, estoy un poco preocupado porque tengo una enfermedad rara, pero para nada quiero dejar todo sin intentar solucionarlo."
+    input_text = "Hola, estoy un poco preocupada porque tengo una enfermedad rara, pero para nada quiero dejar todo sin intentar solucionarlo."
     output = emotions.apply_rhythm(input_text, "Medio") 
     print("Emotions: " + str(output))
 
-    debug_generate_audio(model, "Fran Vivó", "Spanish", input_text, "Fran_test_6")
-    debug_generate_audio(model, "Fran Vivó", "Spanish", output, "Fran_test_7")
+    debug_generate_audio(model, "Nuria López", "Spanish", input_text, "Nuria_test_6")
+    debug_generate_audio(model, "Nuria López", "Spanish", output, "Nuria_test_7")
 
     
 
