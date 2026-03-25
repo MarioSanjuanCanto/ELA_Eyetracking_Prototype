@@ -151,18 +151,20 @@ def remove_prosody(patient_id):
 
 # _________________________ Emotions Test _________________________ 
 
-def emotions_test(audio_path, audio_transcription):
+def emotions_test(patient_name, text):
     '''
     Test adding emotions to text
     '''
     print("[voice_clone][emotions_test] Starting emotions test...")
     model = load_Qwen_model()
     print("[voice_clone][emotions_test] Generating prompt")
-    prompt_items = generate_prompt(model, audio_path, audio_transcription)
+    ref = db.ReferenceManager()
+    data = ref.get_patient_records(patient_name)[0]
+    prompt_items = generate_prompt(model, data["audio_path"], data["transcription"])
     print("[voice_clone][emotions_test] Generating prompt with emotions")
-    text_with_emotions = emotions.get_debug_examples(audio_transcription)
-    for emotion, text in text_with_emotions.items():
-        print("[emotion_test] Generando audio con emoción: ", emotion, " / ", text)
+    text_with_emotions = emotions.get_debug_examples(text)
+    for rhythm, text in text_with_emotions.items():
+        print("[emotion_test] Generando audio con emoción: ", rhythm, " / ", text)
         path = generate_audio(text, "Spanish", model, prompt_items)
         play_audio(path)
 
@@ -180,25 +182,13 @@ def debug_generate_audio(model, patient_name, language ,text, name=""):
     play_audio(audio_path)
 
 if __name__ == "__main__":
-    model = load_Qwen_model()
-    update_prosody("1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11", """Reescribe el texto con estilo de habla de una mujer madrileña joven, coloquial y expresiva.
-
-- Mantén el significado y las frases originales.
-- Introduce oralidad natural (contracciones como pa', na', to').
-- Puedes añadir muletillas naturales como: "Oye,", "O sea,", "vamos,".
-- Añade pausas de habla usando comas, puntos o "...", para mejorar ritmo y emoción.
-- Puedes alargar alguna palabra para enfatizar (ej: peeeero).
-- Puedes usar expresiones coloquiales madrileñas (ej: "tía", "mazo").
-- No cambies términos médicos ni nombres propios.
-- No reformules todo el mensaje: solo dale naturalidad oral.
-
-Devuelve solo el texto final.""")
-
-
+    '''model = load_Qwen_model()
     prosody_prompt = get_prosody("1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11").get("prosody_prompt","")
     output = prosody.apply_prosody("Hola amiga, estoy un poco preocupada porque tengo una enfermedad rara, pero para nada quiero dejar todo sin intentar solucionarlo.", prosody_prompt, model="gpt-5.1")
     print(output)
-    debug_generate_audio(model, "Nuria López", "Spanish", output, "Nuria_test_5")
+    debug_generate_audio(model, "Nuria López", "Spanish", output, "Nuria_test_5")'''
+
+    emotions_test("Fran Vivó", "Mañana tengo que ir al médico para la revisión.")
 
 '''
 [0] : 4b9d2428-84b0-4503-8a7e-899bfeab1b13 - Fran Vivó
