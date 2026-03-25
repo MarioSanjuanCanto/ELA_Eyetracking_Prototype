@@ -5,4 +5,6 @@ librosa
 transformers
 requests
 qwen-tts
+python-dotenv
+openai
 # flash-attn  <-- (Opcional, requiere compilación local en Mac)
