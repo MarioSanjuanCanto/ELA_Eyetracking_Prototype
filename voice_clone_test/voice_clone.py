@@ -182,13 +182,16 @@ def debug_generate_audio(model, patient_name, language ,text, name=""):
     play_audio(audio_path)
 
 if __name__ == "__main__":
-    '''model = load_Qwen_model()
-    prosody_prompt = get_prosody("1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11").get("prosody_prompt","")
-    output = prosody.apply_prosody("Hola amiga, estoy un poco preocupada porque tengo una enfermedad rara, pero para nada quiero dejar todo sin intentar solucionarlo.", prosody_prompt, model="gpt-5.1")
-    print(output)
-    debug_generate_audio(model, "Nuria López", "Spanish", output, "Nuria_test_5")'''
+    model = load_Qwen_model()
+    
+    input_text = "Hola, estoy un poco preocupado porque tengo una enfermedad rara, pero para nada quiero dejar todo sin intentar solucionarlo."
+    output = emotions.apply_rhythm(input_text, "Medio") 
+    print("Emotions: " + str(output))
 
-    emotions_test("Fran Vivó", "Mañana tengo que ir al médico para la revisión.")
+    debug_generate_audio(model, "Fran Vivó", "Spanish", input_text, "Fran_test_6")
+    debug_generate_audio(model, "Fran Vivó", "Spanish", output, "Fran_test_7")
+
+    
 
 '''
 [0] : 4b9d2428-84b0-4503-8a7e-899bfeab1b13 - Fran Vivó
@@ -196,3 +199,13 @@ if __name__ == "__main__":
 [2] : 48679e79-cc08-4e7b-9b52-6b3f6118910d - Fran Vivó Valenciano
 '''
 
+
+'''
+NURIA PROSODIA LENTO:
+    prosody_prompt = get_prosody("1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11").get("prosody_prompt","")
+    output = prosody.apply_prosody("Hola amiga, estoy un poco preocupada porque tengo una enfermedad rara, pero para nada quiero dejar todo sin intentar solucionarlo.", prosody_prompt, model="gpt-5.1")
+    print("Prosody: " + str(output))
+    output = emotions.apply_rhythm(output, "Medio") 
+    print("Emotions: " + str(output))
+    debug_generate_audio(model, "Nuria López", "Spanish", output, "Nuria_test_5")
+'''
