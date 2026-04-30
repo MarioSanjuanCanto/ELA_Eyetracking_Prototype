@@ -1,0 +1,57 @@
+import { ArrowRight, Lock, User } from "lucide-react";
+import { useState } from "react";
+
+export function NameScreen({ onContinue }: { onContinue: (name: string) => void }) {
+  const [name, setName] = useState("");
+  return (
+    <div className="flex flex-col items-center px-6 py-4">
+      <div
+        className="flex h-52 w-52 items-center justify-center rounded-full text-white shadow-[0_20px_60px_-15px_rgba(120,80,220,0.55)] ring-8 ring-white/60"
+        style={{
+          background:
+            "linear-gradient(160deg, var(--brand-from), var(--brand-via), var(--brand-to))",
+        }}
+      >
+        <User className="h-24 w-24" strokeWidth={1.8} />
+      </div>
+
+      <h2 className="mt-8 text-3xl font-bold text-foreground">Lets get to know you</h2>
+      <p className="mt-2 text-base text-foreground/80">
+        Your name will help us to personalized your experience
+      </p>
+
+      <div className="mt-10 w-full max-w-3xl">
+        <label className="mb-3 block text-base font-bold text-foreground">What's your name?</label>
+        <div className="relative">
+          <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+            className="w-full rounded-2xl border border-border bg-background py-5 pl-12 pr-4 text-lg outline-none focus:ring-2 focus:ring-[oklch(0.7_0.18_280)]"
+          />
+        </div>
+
+        <div className="mt-6 flex items-center gap-3 text-sm text-foreground/80">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[oklch(0.95_0.04_290)] text-[oklch(0.55_0.2_280)]">
+            <Lock className="h-4 w-4" />
+          </span>
+          This information is only used to personalize your experience
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => onContinue(name)}
+            className="flex items-center gap-3 rounded-full px-10 py-4 text-lg font-semibold text-white shadow-lg transition hover:opacity-90"
+            style={{
+              background:
+                "linear-gradient(90deg, var(--brand-from), var(--brand-to))",
+            }}
+          >
+            Continue <ArrowRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
