@@ -17,8 +17,8 @@ function Index() {
       <SiteHeader />
       <PanelShell>
         {step === "start" && <StartScreen onStart={() => setStep("name")} />}
-        {step === "name" && <NameScreen onContinue={() => setStep("record")} />}
-        {step === "record" && <RecordScreen />}
+        {step === "name" && <NameScreen onContinue={() => setStep("record")} onBack={() => setStep("start")} />}
+        {step === "record" && <RecordScreen onBack={() => setStep("name")} />}
       </PanelShell>
     </div>
   );

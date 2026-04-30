@@ -1,10 +1,10 @@
-import { ArrowRight, Lock, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Lock, User } from "lucide-react";
 import { useState } from "react";
 
-export function NameScreen({ onContinue }: { onContinue: (name: string) => void }) {
+export function NameScreen({ onContinue, onBack }: { onContinue: (name: string) => void; onBack: () => void }) {
   const [name, setName] = useState("");
   return (
-    <div className="flex w-full flex-col items-center px-6 py-4">
+    <div className="relative flex w-full flex-col items-center px-6 py-4">
       <div
         className="flex h-52 w-52 items-center justify-center rounded-full text-white shadow-[0_20px_60px_-15px_rgba(120,80,220,0.55)] ring-8 ring-white/60"
         style={{
@@ -39,7 +39,13 @@ export function NameScreen({ onContinue }: { onContinue: (name: string) => void 
           This information is only used to personalize your experience
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center gap-4">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-3 rounded-full border border-border bg-background px-10 py-4 text-lg font-semibold text-foreground shadow-sm transition hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" /> Back
+          </button>
           <button
             onClick={() => onContinue(name)}
             className="flex items-center gap-3 rounded-full px-10 py-4 text-lg font-semibold text-white shadow-lg transition hover:opacity-90"

@@ -12,9 +12,9 @@ export function SiteHeader() {
         </div>
 
         <div className="hidden items-center gap-10 md:flex">
-          <LogoText title="valgrAI" subtitle={"Valencian Graduate School\nand Research Network\nof Artificial Intelligence"} accent />
-          <LogoText title="VRAIN" subtitle={"Valencian Research Institute\nfor Artificial Intelligence"} prefix="UPV" />
-          <LogoText title="vertexlit" shieldIcon />
+          <img src="/valgrai.png" alt="valgrAI" className="h-12 object-contain" />
+          <img src="/vrain.png" alt="VRAIN" className="h-12 object-contain" />
+          <img src="/vertexlit.png" alt="vertexlit" className="h-10 object-contain" />
         </div>
 
         <div className="flex items-center gap-3">

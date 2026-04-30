@@ -1,10 +1,10 @@
-import { Mic, Play, RotateCw, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Mic, Play, RotateCw, Trash2, Upload } from "lucide-react";
 
 const audios = ["example1.mp3", "example2.mp3", "example3.mp3"];
 
-export function RecordScreen() {
+export function RecordScreen({ onBack }: { onBack: () => void }) {
   return (
-    <div className="flex w-full flex-col items-center">
+    <div className="relative flex w-full flex-col items-center">
       <div
         className="relative flex h-64 w-64 items-center justify-center rounded-full text-white shadow-[0_20px_60px_-15px_rgba(120,80,220,0.55)] ring-8 ring-white/70"
         style={{
@@ -53,7 +53,13 @@ export function RecordScreen() {
         </div>
       </div>
 
-      <div className="mt-8 flex w-full max-w-5xl justify-end">
+      <div className="mt-8 flex w-full max-w-5xl justify-end gap-4">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-3 rounded-full border border-border bg-background px-10 py-4 text-lg font-semibold text-foreground shadow-sm transition hover:bg-muted"
+        >
+          <ArrowLeft className="h-5 w-5" /> Back
+        </button>
         <button
           className="rounded-full px-10 py-4 text-lg font-semibold text-foreground shadow-lg transition hover:opacity-90"
           style={{
