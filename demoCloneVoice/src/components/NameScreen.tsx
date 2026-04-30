@@ -4,7 +4,7 @@ import { useState } from "react";
 export function NameScreen({ onContinue }: { onContinue: (name: string) => void }) {
   const [name, setName] = useState("");
   return (
-    <div className="flex flex-col items-center px-6 py-4">
+    <div className="flex w-full flex-col items-center px-6 py-4">
       <div
         className="flex h-52 w-52 items-center justify-center rounded-full text-white shadow-[0_20px_60px_-15px_rgba(120,80,220,0.55)] ring-8 ring-white/60"
         style={{
