@@ -2,24 +2,24 @@ import { AudioLines, User } from "lucide-react";
 
 export function StartScreen({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex w-full flex-col items-center">
       <button
         onClick={onStart}
-        className="group relative flex h-72 w-72 items-center justify-center rounded-full text-white shadow-[0_20px_60px_-15px_rgba(120,80,220,0.55)] ring-8 ring-white/60 transition-transform hover:scale-105"
+        className="group relative flex h-[340px] w-[340px] items-center justify-center rounded-full text-white shadow-[0_20px_60px_-15px_rgba(120,80,220,0.55)] ring-8 ring-white/60 transition-transform hover:scale-105"
         style={{
           background:
             "linear-gradient(160deg, var(--brand-from), var(--brand-via), var(--brand-to))",
         }}
       >
-        <div className="flex flex-col items-center gap-3">
-          <AudioLines className="h-14 w-14" strokeWidth={2.5} />
-          <span className="text-3xl font-bold">Start Demo</span>
+        <div className="flex flex-col items-center gap-4">
+          <AudioLines className="h-16 w-16" strokeWidth={2.5} />
+          <span className="text-4xl font-bold">Start Demo</span>
         </div>
       </button>
 
-      <p className="mt-8 text-lg text-foreground">Experience personalized voice synthesis</p>
+      <p className="mt-8 text-xl font-medium text-foreground">Experience personalized voice synthesis</p>
 
-      <div className="mt-14 grid w-full max-w-6xl gap-6 md:grid-cols-3">
+      <div className="mt-12 grid w-full max-w-[1100px] gap-6 md:grid-cols-3">
         <FeatureCard title="Personalized" desc="Clone you unique voice characteristics" />
         <FeatureCard title="Secure & Private" desc="Your data is encrypted and handled with care" />
         <FeatureCard title="AI Powered" desc="State-of-the-art AI for natural and expressive speech" />
