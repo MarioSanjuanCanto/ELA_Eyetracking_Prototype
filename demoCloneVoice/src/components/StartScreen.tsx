@@ -1,4 +1,4 @@
-import { AudioLines, User } from "lucide-react";
+import { AudioLines, User, ShieldCheck, Sparkles, LucideIcon } from "lucide-react";
 
 export function StartScreen({ onStart }: { onStart: () => void }) {
   return (
@@ -20,19 +20,31 @@ export function StartScreen({ onStart }: { onStart: () => void }) {
       <p className="mt-8 text-xl font-medium text-foreground">Experience personalized voice synthesis</p>
 
       <div className="mt-12 grid w-full max-w-[1100px] gap-6 md:grid-cols-3">
-        <FeatureCard title="Personalized" desc="Clone you unique voice characteristics" />
-        <FeatureCard title="Secure & Private" desc="Your data is encrypted and handled with care" />
-        <FeatureCard title="AI Powered" desc="State-of-the-art AI for natural and expressive speech" />
+        <FeatureCard 
+          icon={User}
+          title="Personalized" 
+          desc="Clone you unique voice characteristics" 
+        />
+        <FeatureCard 
+          icon={ShieldCheck}
+          title="Secure & Private" 
+          desc="Your data is encrypted and handled with care" 
+        />
+        <FeatureCard 
+          icon={Sparkles}
+          title="AI Powered" 
+          desc="State-of-the-art AI for natural and expressive speech" 
+        />
       </div>
     </div>
   );
 }
 
-function FeatureCard({ title, desc }: { title: string; desc: string }) {
+function FeatureCard({ icon: Icon, title, desc }: { icon: LucideIcon; title: string; desc: string }) {
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border/70 bg-background/70 p-5 shadow-sm backdrop-blur">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[oklch(0.95_0.04_290)] text-[oklch(0.55_0.2_280)]">
-        <User className="h-5 w-5" />
+        <Icon className="h-5 w-5" />
       </div>
       <div>
         <h3 className="text-lg font-bold text-foreground">{title}</h3>
