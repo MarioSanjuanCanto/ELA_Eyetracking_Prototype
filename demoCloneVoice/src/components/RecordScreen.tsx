@@ -7,6 +7,22 @@ type AudioFile = {
   url?: string;
 };
 
+const getSupportedMimeType = () => {
+  const types = [
+    "audio/mp4",
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/ogg;codecs=opus",
+    "audio/wav",
+  ];
+  for (const type of types) {
+    if (MediaRecorder.isTypeSupported(type)) {
+      return type;
+    }
+  }
+  return "";
+};
+
 const getAudioDuration = (file: File): Promise<number> => {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
@@ -42,7 +58,8 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
     } else {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream);
+        const mimeType = getSupportedMimeType();
+        const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
         mediaRecorderRef.current = mediaRecorder;
         audioChunksRef.current = [];
 
@@ -51,13 +68,21 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
         };
 
         mediaRecorder.onstop = () => {
-          const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          const recordedMimeType = mediaRecorder.mimeType || "audio/webm";
+          const blob = new Blob(audioChunksRef.current, { type: recordedMimeType });
+          console.log("Recorded blob:", blob.size, blob.type);
           const url = URL.createObjectURL(blob);
+          
           // Use ref (not state) to avoid stale closure — reads the real start time
           const start = recordingStartTimeRef.current;
           const duration = start ? (Date.now() - start) / 1000 : 0;
           recordingStartTimeRef.current = null;
-          setAudios((prev) => [...prev, { name: `${crypto.randomUUID()}.webm`, durationSeconds: duration, url }]);
+          
+          let extension = "webm";
+          if (recordedMimeType.includes("mp4")) extension = "m4a";
+          else if (recordedMimeType.includes("wav")) extension = "wav";
+          
+          setAudios((prev) => [...prev, { name: `${crypto.randomUUID()}.${extension}`, durationSeconds: duration, url }]);
           stream.getTracks().forEach((t) => t.stop());
         };
 
@@ -66,8 +91,8 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
         recordingStartTimeRef.current = Date.now();
         setIsRecording(true);
       } catch (err) {
-        console.error("Microphone access denied:", err);
-        alert("Could not access microphone. Please check browser permissions.");
+        console.error("Microphone access denied or error:", err);
+        alert("Could not access microphone or recording failed. Please check browser permissions.");
       }
     }
   };
