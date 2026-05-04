@@ -47,8 +47,9 @@ export function NameScreen({ onContinue, onBack }: { onContinue: (name: string) 
             <ArrowLeft className="h-5 w-5" /> Back
           </button>
           <button
+            disabled={!name.trim()}
             onClick={() => onContinue(name)}
-            className="flex items-center gap-3 rounded-full px-10 py-4 text-lg font-semibold text-white shadow-lg transition hover:opacity-90"
+            className="flex items-center gap-3 rounded-full px-10 py-4 text-lg font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               background:
                 "linear-gradient(90deg, var(--brand-from), var(--brand-to))",
