@@ -1,29 +1,106 @@
-import { useState } from "react";
-import { ArrowLeft, Mic, Play, RotateCw, Trash2, Upload, Square } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ArrowLeft, Mic, Play, Pause, RotateCw, Trash2, Upload, Square } from "lucide-react";
+
+type AudioFile = {
+  name: string;
+  durationSeconds: number;
+  url?: string;
+};
+
+const getAudioDuration = (file: File): Promise<number> => {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio(url);
+    audio.onloadedmetadata = () => {
+      resolve(audio.duration);
+      URL.revokeObjectURL(url);
+    };
+    audio.onerror = () => {
+      resolve(0); // fallback if parsing fails
+      URL.revokeObjectURL(url);
+    };
+  });
+};
 
 export function RecordScreen({ onBack }: { onBack: () => void }) {
-  const [audios, setAudios] = useState<string[]>([]);
+  const [audios, setAudios] = useState<AudioFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
   const handleMicClick = () => {
     if (isRecording) {
       setIsRecording(false);
-      setAudios((prev) => [...prev, `recorded_audio_${prev.length + 1}.mp3`]);
+      const duration = recordingStartTime ? (Date.now() - recordingStartTime) / 1000 : 0;
+      setAudios((prev) => [...prev, { name: `${crypto.randomUUID()}.mp3`, durationSeconds: duration }]);
+      setRecordingStartTime(null);
     } else {
       setIsRecording(true);
+      setRecordingStartTime(Date.now());
     }
   };
 
-  const handleUpload = () => {
-    setAudios((prev) => [...prev, `uploaded_audio_${prev.length + 1}.mp3`]);
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const duration = await getAudioDuration(file);
+      const url = URL.createObjectURL(file);
+      setAudios((prev) => [...prev, { name: file.name, durationSeconds: duration, url }]);
+    }
+    // Clear input so same file can be uploaded again if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handlePlayPause = (index: number, url?: string) => {
+    if (!url) return;
+    
+    if (playingIndex === index) {
+      audioRef.current?.pause();
+      setPlayingIndex(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const newAudio = new Audio(url);
+      newAudio.onended = () => setPlayingIndex(null);
+      newAudio.play();
+      audioRef.current = newAudio;
+      setPlayingIndex(index);
+    }
   };
 
   const handleDelete = (indexToRemove: number) => {
-    setAudios((prev) => prev.filter((_, index) => index !== indexToRemove));
+    setAudios((prev) => {
+      const audioToDelete = prev[indexToRemove];
+      if (audioToDelete.url) {
+        URL.revokeObjectURL(audioToDelete.url);
+      }
+      return prev.filter((_, index) => index !== indexToRemove);
+    });
+    if (playingIndex === indexToRemove) {
+      audioRef.current?.pause();
+      setPlayingIndex(null);
+    }
   };
 
-  // Mocking 15 secs per audio for the progress bar
-  const totalSeconds = audios.length * 15;
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
+  const totalSeconds = Math.round(audios.reduce((acc, curr) => acc + curr.durationSeconds, 0));
   const progressPercent = Math.min((totalSeconds / 60) * 100, 100);
 
   return (
@@ -42,8 +119,15 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
       <div className="mt-10 w-full max-w-5xl rounded-2xl border border-border bg-background/80 p-6 shadow-md backdrop-blur">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-extrabold text-foreground">Recorded audios</h3>
-          <button 
-            onClick={handleUpload}
+          <input
+            type="file"
+            accept="audio/*"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button
+            onClick={handleUploadClick}
             className="flex items-center gap-2 rounded-full bg-[oklch(0.92_0.05_220)] px-5 py-2 text-sm font-semibold text-foreground hover:bg-[oklch(0.88_0.06_220)] transition-colors"
           >
             <Upload className="h-4 w-4" />
@@ -59,14 +143,23 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
           ) : (
             audios.map((a, index) => (
               <div
-                key={`${a}-${index}`}
+                key={`${a.name}-${index}`}
                 className="flex items-center justify-between rounded-full border border-border bg-background px-6 py-4 shadow-sm"
               >
-                <span className="font-semibold text-foreground">{a}</span>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-foreground max-w-md truncate">{a.name}</span>
+                  <span className="text-xs text-foreground/50">{Math.round(a.durationSeconds)} secs</span>
+                </div>
                 <div className="flex items-center gap-4 text-foreground/70">
-                  <button className="hover:text-foreground transition-colors"><Play className="h-5 w-5" /></button>
-                  <button className="hover:text-foreground transition-colors"><RotateCw className="h-5 w-5" /></button>
                   <button 
+                    onClick={() => handlePlayPause(index, a.url)}
+                    className="hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    disabled={!a.url}
+                  >
+                    {playingIndex === index ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                  </button>
+                  <button className="hover:text-foreground transition-colors"><RotateCw className="h-5 w-5" /></button>
+                  <button
                     onClick={() => handleDelete(index)}
                     className="hover:text-destructive transition-colors"
                   >
@@ -82,9 +175,9 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full transition-all duration-500 ease-in-out"
-              style={{ 
+              style={{
                 width: `${progressPercent}%`,
-                background: "linear-gradient(90deg, var(--brand-from), var(--brand-to))" 
+                background: "linear-gradient(90deg, var(--brand-from), var(--brand-to))"
               }}
             />
           </div>
