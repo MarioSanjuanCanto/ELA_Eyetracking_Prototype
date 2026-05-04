@@ -4,7 +4,8 @@ import { ArrowLeft, Mic, Play, Pause, RotateCw, Trash2, Upload, Square } from "l
 type AudioFile = {
   name: string;
   durationSeconds: number;
-  url?: string;
+  url: string;
+  file: Blob | File;
 };
 
 const getSupportedMimeType = () => {
@@ -38,7 +39,7 @@ const getAudioDuration = (file: File): Promise<number> => {
   });
 };
 
-export function RecordScreen({ onBack }: { onBack: () => void }) {
+export function RecordScreen({ userName, onBack }: { userName: string; onBack: () => void }) {
   const [audios, setAudios] = useState<AudioFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const recordingStartTimeRef = useRef<number | null>(null); // ref to avoid stale closure
@@ -49,6 +50,45 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const playbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isCloning, setIsCloning] = useState(false);
+
+  const handleStartCloning = async () => {
+    setIsCloning(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", userName);
+      // Optional: formData.append("description", `Voice cloned for ${userName}`);
+      
+      audios.forEach((audio, index) => {
+        formData.append("files", audio.file, audio.name);
+      });
+
+      console.log("Sending to ElevenLabs API for user:", userName);
+      
+      /* 
+      // Example implementation:
+      const response = await fetch("https://api.elevenlabs.io/v1/voices/add", {
+        method: "POST",
+        headers: {
+          "xi-api-key": "YOUR_API_KEY_HERE"
+        },
+        body: formData
+      });
+      const data = await response.json();
+      console.log("Voice created:", data);
+      */
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      alert(`Success! Voice cloning process started for ${userName}.`);
+      
+    } catch (error) {
+      console.error("Error cloning voice:", error);
+      alert("Failed to start cloning process.");
+    } finally {
+      setIsCloning(false);
+    }
+  };
 
   const handleMicClick = async () => {
     if (isRecording) {
@@ -78,11 +118,14 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
           const duration = start ? (Date.now() - start) / 1000 : 0;
           recordingStartTimeRef.current = null;
           
-          let extension = "webm";
-          if (recordedMimeType.includes("mp4")) extension = "m4a";
-          else if (recordedMimeType.includes("wav")) extension = "wav";
+          const extension = recordedMimeType.includes("mp4") ? "m4a" : recordedMimeType.includes("webm") ? "webm" : "wav";
           
-          setAudios((prev) => [...prev, { name: `${crypto.randomUUID()}.${extension}`, durationSeconds: duration, url }]);
+          setAudios((prev) => [...prev, { 
+            name: `${crypto.randomUUID()}.${extension}`, 
+            durationSeconds: duration, 
+            url,
+            file: blob 
+          }]);
           stream.getTracks().forEach((t) => t.stop());
         };
 
@@ -106,7 +149,7 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
     if (file) {
       const duration = await getAudioDuration(file);
       const url = URL.createObjectURL(file);
-      setAudios((prev) => [...prev, { name: file.name, durationSeconds: duration, url }]);
+      setAudios((prev) => [...prev, { name: file.name, durationSeconds: duration, url, file }]);
     }
     // Clear input so same file can be uploaded again if needed
     if (fileInputRef.current) {
@@ -259,13 +302,21 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
           <ArrowLeft className="h-5 w-5" /> Back
         </button>
         <button
-          disabled={totalSeconds < 10}
-          className="rounded-full px-10 py-4 text-lg font-semibold text-foreground shadow-lg transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={totalSeconds < 10 || isCloning}
+          onClick={handleStartCloning}
+          className="rounded-full px-10 py-4 text-lg font-semibold text-foreground shadow-lg transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           style={{
             background: "linear-gradient(90deg, var(--cta-from), var(--cta-to))",
           }}
         >
-          Start Cloning
+          {isCloning ? (
+            <>
+              <RotateCw className="h-5 w-5 animate-spin" />
+              Cloning...
+            </>
+          ) : (
+            "Start Cloning"
+          )}
         </button>
       </div>
     </div>
