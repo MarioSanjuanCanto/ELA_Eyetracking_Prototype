@@ -238,14 +238,3 @@ if __name__ == "__main__":
 [1] : 1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11 - Nuria López
 [2] : 48679e79-cc08-4e7b-9b52-6b3f6118910d - Fran Vivó Valenciano
 '''
-
-
-'''
-NURIA PROSODIA LENTO:
-    prosody_prompt = get_prosody("1bc3ee7b-09bf-41cb-ab6e-e0172f57bd11").get("prosody_prompt","")
-    output = prosody.apply_prosody("Hola amiga, estoy un poco preocupada porque tengo una enfermedad rara, pero para nada quiero dejar todo sin intentar solucionarlo.", prosody_prompt, model="gpt-5.1")
-    print("Prosody: " + str(output))
-    output = emotions.apply_rhythm(output, "Medio") 
-    print("Emotions: " + str(output))
-    debug_generate_audio(model, "Nuria López", "Spanish", output, "Nuria_test_5")
-'''
