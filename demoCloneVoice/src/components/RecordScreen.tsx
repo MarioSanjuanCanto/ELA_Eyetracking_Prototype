@@ -265,7 +265,6 @@ export function RecordScreen({ userName, onBack }: { userName: string; onBack: (
                   >
                     {playingIndex === index ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                   </button>
-                  <button className="hover:text-foreground transition-colors"><RotateCw className="h-5 w-5" /></button>
                   <button
                     onClick={() => handleDelete(index)}
                     className="hover:text-destructive transition-colors"
