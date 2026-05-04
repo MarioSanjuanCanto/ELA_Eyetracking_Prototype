@@ -1,7 +1,7 @@
 import { ArrowLeft, ArrowRight, Lock, User } from "lucide-react";
 import { useState } from "react";
 
-export function NameScreen({ onContinue, onBack }: { onContinue: (name: string) => void; onBack: () => void }) {
+export function NameScreen({ t, onContinue, onBack }: { t: any; onContinue: (name: string) => void; onBack: () => void }) {
   const [name, setName] = useState("");
   return (
     <div className="relative flex w-full flex-col items-center px-6 py-4">
@@ -15,19 +15,19 @@ export function NameScreen({ onContinue, onBack }: { onContinue: (name: string) 
         <User className="h-24 w-24" strokeWidth={1.8} />
       </div>
 
-      <h2 className="mt-8 text-3xl font-bold text-foreground">Lets get to know you</h2>
+      <h2 className="mt-8 text-3xl font-bold text-foreground">{t.nameTitle}</h2>
       <p className="mt-2 text-base text-foreground/80">
-        Your name will help us to personalized your experience
+        {t.nameDesc}
       </p>
 
       <div className="mt-10 w-full max-w-3xl">
-        <label className="mb-3 block text-base font-bold text-foreground">What's your name?</label>
+        <label className="mb-3 block text-base font-bold text-foreground">{t.nameLabel}</label>
         <div className="relative">
           <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
+            placeholder={t.namePlaceholder}
             className="w-full rounded-2xl border border-border bg-background py-5 pl-12 pr-4 text-lg outline-none focus:ring-2 focus:ring-[oklch(0.7_0.18_280)]"
           />
         </div>
@@ -36,7 +36,7 @@ export function NameScreen({ onContinue, onBack }: { onContinue: (name: string) 
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[oklch(0.95_0.04_290)] text-[oklch(0.55_0.2_280)]">
             <Lock className="h-4 w-4" />
           </span>
-          This information is only used to personalize your experience
+          {t.nameDisclaimer}
         </div>
 
         <div className="mt-8 flex justify-center gap-4">
@@ -44,7 +44,7 @@ export function NameScreen({ onContinue, onBack }: { onContinue: (name: string) 
             onClick={onBack}
             className="flex items-center gap-3 rounded-full border border-border bg-background px-10 py-4 text-lg font-semibold text-foreground shadow-sm transition hover:bg-muted"
           >
-            <ArrowLeft className="h-5 w-5" /> Back
+            <ArrowLeft className="h-5 w-5" /> {t.back}
           </button>
           <button
             disabled={!name.trim()}
@@ -55,7 +55,7 @@ export function NameScreen({ onContinue, onBack }: { onContinue: (name: string) 
                 "linear-gradient(90deg, var(--brand-from), var(--brand-to))",
             }}
           >
-            Continue <ArrowRight className="h-5 w-5" />
+            {t.continue} <ArrowRight className="h-5 w-5" />
           </button>
         </div>
       </div>

@@ -39,7 +39,7 @@ const getAudioDuration = (file: File): Promise<number> => {
   });
 };
 
-export function RecordScreen({ userName, onBack }: { userName: string; onBack: () => void }) {
+export function RecordScreen({ t, lang, userName, onBack }: { t: any; lang: "es" | "en"; userName: string; onBack: () => void }) {
   const [audios, setAudios] = useState<AudioFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const recordingStartTimeRef = useRef<number | null>(null); // ref to avoid stale closure
@@ -80,11 +80,11 @@ export function RecordScreen({ userName, onBack }: { userName: string; onBack: (
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      alert(`Success! Voice cloning process started for ${userName}.`);
+      alert(`${t.success} ${userName}.`);
       
     } catch (error) {
       console.error("Error cloning voice:", error);
-      alert("Failed to start cloning process.");
+      alert(t.fail);
     } finally {
       setIsCloning(false);
     }
@@ -226,7 +226,7 @@ export function RecordScreen({ userName, onBack }: { userName: string; onBack: (
 
       <div className="mt-10 w-full max-w-5xl rounded-2xl border border-border bg-background/80 p-6 shadow-md backdrop-blur">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-extrabold text-foreground">Recorded audios</h3>
+          <h3 className="text-xl font-extrabold text-foreground">{t.recordedAudios}</h3>
           <input
             type="file"
             accept="audio/*"
@@ -239,14 +239,14 @@ export function RecordScreen({ userName, onBack }: { userName: string; onBack: (
             className="flex items-center gap-2 rounded-full bg-[oklch(0.92_0.05_220)] px-5 py-2 text-sm font-semibold text-foreground hover:bg-[oklch(0.88_0.06_220)] transition-colors"
           >
             <Upload className="h-4 w-4" />
-            Upload audio file
+            {t.uploadAudio}
           </button>
         </div>
 
         <div className="mt-6 space-y-3 min-h-[80px]">
           {audios.length === 0 ? (
-            <div className="flex h-full items-center justify-center py-6 text-foreground/50 italic">
-              No audios recorded yet. Start recording or upload a file.
+            <div className="flex h-full items-center justify-center py-6 text-foreground/50 italic text-center px-4">
+              {t.noAudios}
             </div>
           ) : (
             audios.map((a, index) => (
@@ -256,7 +256,7 @@ export function RecordScreen({ userName, onBack }: { userName: string; onBack: (
               >
                 <div className="flex flex-col">
                   <span className="font-semibold text-foreground max-w-md truncate">{a.name}</span>
-                  <span className="text-xs text-foreground/50">{Math.round(a.durationSeconds)} secs</span>
+                  <span className="text-xs text-foreground/50">{Math.round(a.durationSeconds)} {lang === "es" ? "seg" : "secs"}</span>
                 </div>
                 <div className="flex items-center gap-4 text-foreground/70">
                   <button 
@@ -288,7 +288,7 @@ export function RecordScreen({ userName, onBack }: { userName: string; onBack: (
             />
           </div>
           <p className="mt-3 text-base font-semibold text-foreground">
-            Total data provided: <span className="font-normal">{totalSeconds} secs (min 10 secs)</span>
+            {t.totalData}: <span className="font-normal">{totalSeconds} {lang === "es" ? "seg" : "secs"} ({t.minSecs})</span>
           </p>
         </div>
       </div>
@@ -298,7 +298,7 @@ export function RecordScreen({ userName, onBack }: { userName: string; onBack: (
           onClick={onBack}
           className="flex items-center gap-3 rounded-full border border-border bg-background px-10 py-4 text-lg font-semibold text-foreground shadow-sm transition hover:bg-muted"
         >
-          <ArrowLeft className="h-5 w-5" /> Back
+          <ArrowLeft className="h-5 w-5" /> {t.back}
         </button>
         <button
           disabled={totalSeconds < 10 || isCloning}
@@ -311,10 +311,10 @@ export function RecordScreen({ userName, onBack }: { userName: string; onBack: (
           {isCloning ? (
             <>
               <RotateCw className="h-5 w-5 animate-spin" />
-              Cloning...
+              {t.cloning}
             </>
           ) : (
-            "Start Cloning"
+            t.startCloning
           )}
         </button>
       </div>

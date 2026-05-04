@@ -1,6 +1,6 @@
 import { AudioLines, User, ShieldCheck, Sparkles, LucideIcon } from "lucide-react";
 
-export function StartScreen({ onStart }: { onStart: () => void }) {
+export function StartScreen({ t, onStart }: { t: any; onStart: () => void }) {
   return (
     <div className="flex w-full flex-col items-center">
       <button
@@ -13,27 +13,27 @@ export function StartScreen({ onStart }: { onStart: () => void }) {
       >
         <div className="flex flex-col items-center gap-4">
           <AudioLines className="h-16 w-16" strokeWidth={2.5} />
-          <span className="text-4xl font-bold">Start Demo</span>
+          <span className="text-4xl font-bold">{t.startDemo}</span>
         </div>
       </button>
 
-      <p className="mt-8 text-xl font-medium text-foreground">Experience personalized voice synthesis</p>
+      <p className="mt-8 text-xl font-medium text-foreground">{t.experience}</p>
 
       <div className="mt-12 grid w-full max-w-[1100px] gap-6 md:grid-cols-3">
         <FeatureCard 
           icon={User}
-          title="Personalized" 
-          desc="Clone you unique voice characteristics" 
+          title={t.personalizedTitle} 
+          desc={t.personalizedDesc} 
         />
         <FeatureCard 
           icon={ShieldCheck}
-          title="Secure & Private" 
-          desc="Your data is encrypted and handled with care" 
+          title={t.secureTitle} 
+          desc={t.secureDesc} 
         />
         <FeatureCard 
           icon={Sparkles}
-          title="AI Powered" 
-          desc="State-of-the-art AI for natural and expressive speech" 
+          title={t.aiPoweredTitle} 
+          desc={t.aiPoweredDesc} 
         />
       </div>
     </div>
