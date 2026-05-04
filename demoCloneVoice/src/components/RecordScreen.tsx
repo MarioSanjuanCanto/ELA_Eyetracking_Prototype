@@ -25,21 +25,50 @@ const getAudioDuration = (file: File): Promise<number> => {
 export function RecordScreen({ onBack }: { onBack: () => void }) {
   const [audios, setAudios] = useState<AudioFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
+  const recordingStartTimeRef = useRef<number | null>(null); // ref to avoid stale closure
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const playbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleMicClick = () => {
+  const handleMicClick = async () => {
     if (isRecording) {
+      // Stop recording — onstop will fire and save the audio
+      mediaRecorderRef.current?.stop();
       setIsRecording(false);
-      const duration = recordingStartTime ? (Date.now() - recordingStartTime) / 1000 : 0;
-      setAudios((prev) => [...prev, { name: `${crypto.randomUUID()}.mp3`, durationSeconds: duration }]);
-      setRecordingStartTime(null);
     } else {
-      setIsRecording(true);
-      setRecordingStartTime(Date.now());
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          const url = URL.createObjectURL(blob);
+          // Use ref (not state) to avoid stale closure — reads the real start time
+          const start = recordingStartTimeRef.current;
+          const duration = start ? (Date.now() - start) / 1000 : 0;
+          recordingStartTimeRef.current = null;
+          setAudios((prev) => [...prev, { name: `${crypto.randomUUID()}.webm`, durationSeconds: duration, url }]);
+          stream.getTracks().forEach((t) => t.stop());
+        };
+
+        // timeslice of 100ms ensures ondataavailable fires regularly
+        mediaRecorder.start(100);
+        recordingStartTimeRef.current = Date.now();
+        setIsRecording(true);
+      } catch (err) {
+        console.error("Microphone access denied:", err);
+        alert("Could not access microphone. Please check browser permissions.");
+      }
     }
   };
 
@@ -60,9 +89,12 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const handlePlayPause = (index: number, url?: string) => {
-    if (!url) return;
-    
+  const handlePlayPause = (index: number, audio: AudioFile) => {
+    if (playbackTimeoutRef.current) {
+      clearTimeout(playbackTimeoutRef.current);
+      playbackTimeoutRef.current = null;
+    }
+
     if (playingIndex === index) {
       audioRef.current?.pause();
       setPlayingIndex(null);
@@ -70,11 +102,13 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
       if (audioRef.current) {
         audioRef.current.pause();
       }
-      const newAudio = new Audio(url);
-      newAudio.onended = () => setPlayingIndex(null);
-      newAudio.play();
-      audioRef.current = newAudio;
-      setPlayingIndex(index);
+      if (audio.url) {
+        const newAudio = new Audio(audio.url);
+        newAudio.onended = () => setPlayingIndex(null);
+        newAudio.play();
+        audioRef.current = newAudio;
+        setPlayingIndex(index);
+      }
     }
   };
 
@@ -88,6 +122,9 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
     });
     if (playingIndex === indexToRemove) {
       audioRef.current?.pause();
+      if (playbackTimeoutRef.current) {
+        clearTimeout(playbackTimeoutRef.current);
+      }
       setPlayingIndex(null);
     }
   };
@@ -96,6 +133,9 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+      }
+      if (playbackTimeoutRef.current) {
+        clearTimeout(playbackTimeoutRef.current);
       }
     };
   }, []);
@@ -152,9 +192,8 @@ export function RecordScreen({ onBack }: { onBack: () => void }) {
                 </div>
                 <div className="flex items-center gap-4 text-foreground/70">
                   <button 
-                    onClick={() => handlePlayPause(index, a.url)}
-                    className="hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    disabled={!a.url}
+                    onClick={() => handlePlayPause(index, a)}
+                    className="hover:text-foreground transition-colors"
                   >
                     {playingIndex === index ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                   </button>
