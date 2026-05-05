@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PanelShell } from "@/components/PanelShell";
 import { StartScreen } from "@/components/StartScreen";
 import { NameScreen } from "@/components/NameScreen";
 import { RecordScreen } from "@/components/RecordScreen";
-import EyeTrackingIndex from "../../eye_tracking_direction_type_implementation/src/pages/Index";
+
+const EyeTrackingIndex = lazy(() => import("../../eye_tracking_direction_type_implementation/src/pages/Index"));
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -83,6 +84,26 @@ function Index() {
 
   const t = translations[lang];
 
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const registerServiceWorker = () => {
+      navigator.serviceWorker.register("/sw.js").catch((error) => {
+        console.error("Service worker registration failed:", error);
+      });
+    };
+
+    if (document.readyState === "complete") {
+      registerServiceWorker();
+      return;
+    }
+
+    window.addEventListener("load", registerServiceWorker, { once: true });
+    return () => window.removeEventListener("load", registerServiceWorker);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[var(--app-bg)]">
       {step !== "eyeTracking" && (
@@ -118,7 +139,11 @@ function Index() {
           />
         )}
       </PanelShell>}
-      {step === "eyeTracking" && <EyeTrackingIndex />}
+      {step === "eyeTracking" && (
+        <Suspense fallback={<div className="min-h-screen" />}>
+          <EyeTrackingIndex />
+        </Suspense>
+      )}
     </div>
   );
 }
