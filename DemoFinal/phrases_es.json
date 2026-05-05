@@ -1,0 +1,82 @@
+{
+    "saludos": [
+        "Hola",
+        "Buenos días",
+        "Buenas tardes",
+        "Buenas noches",
+        "Encantado de verte",
+        "¿Cómo estás?",
+        "Me alegro de verte",
+        "¿Todo bien?"
+    ],
+    "despedidas": [
+        "Adiós",
+        "Hasta luego",
+        "Hasta mañana",
+        "Nos vemos pronto",
+        "Que tengas un buen día",
+        "Cuídate mucho",
+        "Hablamos luego",
+        "Que descanses"
+    ],
+    "frases_importantes": [
+        "No me encuentro bien",
+        "Necesito descansar",
+        "No entiendo",
+        "Repite por favor",
+        "Más despacio por favor",
+        "Gracias",
+        "Perdón",
+        "Es importante"
+    ],
+    "preguntas": [
+        "¿Qué hora es?",
+        "¿Dónde estamos?",
+        "¿Quién está aquí?",
+        "¿Qué vamos a hacer ahora?",
+        "¿Puedes ayudarme?",
+        "¿Puedes explicarlo otra vez?",
+        "¿Cuánto falta?",
+        "¿Está todo bien?"
+    ],
+    "control_entorno": [
+        "Enciende la luz",
+        "Apaga la luz",
+        "Sube la temperatura",
+        "Baja la temperatura",
+        "Abre la puerta",
+        "Cierra la puerta",
+        "Sube el volumen",
+        "Baja el volumen"
+    ],
+    "teclado": [
+        "ESPACIO",
+        "BORRAR",
+        "ENTER",
+        "CAMBIAR A MAYÚSCULAS",
+        "CAMBIAR A MINÚSCULAS",
+        "MOVER CURSOR IZQUIERDA",
+        "MOVER CURSOR DERECHA",
+        "SELECCIONAR"
+    ],
+    "necesidades": [
+        "Tengo sed",
+        "Tengo hambre",
+        "Necesito ir al baño",
+        "Necesito agua",
+        "Necesito medicación",
+        "Necesito cambiar de posición",
+        "Tengo frío",
+        "Tengo calor"
+    ],
+    "emergencias": [
+        "Llama a emergencias",
+        "Necesito ayuda urgente",
+        "Me duele mucho",
+        "No puedo respirar bien",
+        "Llama a un médico",
+        "Estoy mareado",
+        "Me he caído",
+        "No puedo moverme"
+    ]
+}
