@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Mic, Play, Pause, RotateCw, Trash2, Upload, Square } from "lucide-react";
+import { cloneVoiceAction, getClonedVoicesAction } from "@/lib/voice-actions";
 
 type AudioFile = {
   name: string;
@@ -39,7 +40,7 @@ const getAudioDuration = (file: File): Promise<number> => {
   });
 };
 
-export function RecordScreen({ t, lang, userName, onBack }: { t: any; lang: "es" | "en"; userName: string; onBack: () => void }) {
+export function RecordScreen({ t, lang, userName, isAdmin, onBack }: { t: any; lang: "es" | "en"; userName: string; isAdmin: boolean; onBack: () => void }) {
   const [audios, setAudios] = useState<AudioFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const recordingStartTimeRef = useRef<number | null>(null); // ref to avoid stale closure
@@ -57,36 +58,41 @@ export function RecordScreen({ t, lang, userName, onBack }: { t: any; lang: "es"
     try {
       const formData = new FormData();
       formData.append("name", userName);
-      // Optional: formData.append("description", `Voice cloned for ${userName}`);
-      
-      audios.forEach((audio, index) => {
+
+      audios.forEach((audio) => {
         formData.append("files", audio.file, audio.name);
       });
 
-      console.log("Sending to ElevenLabs API for user:", userName);
-      
-      /* 
-      // Example implementation:
-      const response = await fetch("https://api.elevenlabs.io/v1/voices/add", {
-        method: "POST",
-        headers: {
-          "xi-api-key": "YOUR_API_KEY_HERE"
-        },
-        body: formData
-      });
-      const data = await response.json();
-      console.log("Voice created:", data);
-      */
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("Calling secure server function for user:", userName);
+
+      await cloneVoiceAction({ data: formData });
+
       alert(`${t.success} ${userName}.`);
-      
+
     } catch (error) {
       console.error("Error cloning voice:", error);
       alert(t.fail);
     } finally {
       setIsCloning(false);
+    }
+  };
+
+  const handleGetVoices = async () => {
+    try {
+      const voices = await getClonedVoicesAction();
+
+      console.log("Voices:", voices);
+
+      const clonedVoices = voices.filter(
+        (voice: any) =>
+          voice.category === "cloned" ||
+          voice.category === "professional" ||
+          voice.samples?.length > 0
+      );
+
+      console.log("Cloned voices:", clonedVoices);
+    } catch (error) {
+      console.error("Error getting voices:", error);
     }
   };
 
@@ -112,19 +118,19 @@ export function RecordScreen({ t, lang, userName, onBack }: { t: any; lang: "es"
           const blob = new Blob(audioChunksRef.current, { type: recordedMimeType });
           console.log("Recorded blob:", blob.size, blob.type);
           const url = URL.createObjectURL(blob);
-          
+
           // Use ref (not state) to avoid stale closure — reads the real start time
           const start = recordingStartTimeRef.current;
           const duration = start ? (Date.now() - start) / 1000 : 0;
           recordingStartTimeRef.current = null;
-          
+
           const extension = recordedMimeType.includes("mp4") ? "m4a" : recordedMimeType.includes("webm") ? "webm" : "wav";
-          
-          setAudios((prev) => [...prev, { 
-            name: `${crypto.randomUUID()}.${extension}`, 
-            durationSeconds: duration, 
+
+          setAudios((prev) => [...prev, {
+            name: `${crypto.randomUUID()}.${extension}`,
+            durationSeconds: duration,
             url,
-            file: blob 
+            file: blob
           }]);
           stream.getTracks().forEach((t) => t.stop());
         };
@@ -259,7 +265,7 @@ export function RecordScreen({ t, lang, userName, onBack }: { t: any; lang: "es"
                   <span className="text-xs text-foreground/50">{Math.round(a.durationSeconds)} {lang === "es" ? "seg" : "secs"}</span>
                 </div>
                 <div className="flex items-center gap-4 text-foreground/70">
-                  <button 
+                  <button
                     onClick={() => handlePlayPause(index, a)}
                     className="hover:text-foreground transition-colors"
                   >
@@ -317,6 +323,14 @@ export function RecordScreen({ t, lang, userName, onBack }: { t: any; lang: "es"
             t.startCloning
           )}
         </button>
+        {isAdmin && (
+          <button
+            onClick={handleGetVoices}
+            className="flex items-center gap-3 rounded-full border border-border bg-background/50 px-6 py-4 text-sm font-semibold text-foreground/70 shadow-sm transition hover:bg-muted hover:text-foreground"
+          >
+            {t.viewVoices}
+          </button>
+        )}
       </div>
     </div>
   );

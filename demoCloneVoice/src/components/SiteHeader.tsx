@@ -3,10 +3,14 @@ import { Globe, Settings, LogOut } from "lucide-react";
 export function SiteHeader({ 
   lang, 
   onToggleLang, 
+  onToggleAdmin,
+  isAdmin,
   t 
 }: { 
   lang: "es" | "en"; 
   onToggleLang: () => void;
+  onToggleAdmin: () => void;
+  isAdmin: boolean;
   t: any;
 }) {
   return (
@@ -33,7 +37,10 @@ export function SiteHeader({
             <Globe className="h-4 w-4" />
             {lang.toUpperCase()}
           </button>
-          <button className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-muted">
+          <button 
+            onClick={onToggleAdmin}
+            className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium shadow-sm transition-all ${isAdmin ? "border-primary bg-primary/10 text-primary" : "border-border bg-background hover:bg-muted"}`}
+          >
             <Settings className="h-4 w-4" />
             Admin
           </button>

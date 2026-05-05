@@ -38,6 +38,7 @@ const translations = {
     cloning: "Clonando...",
     success: "¡Éxito! El proceso de clonación de voz ha comenzado para",
     fail: "Error al iniciar el proceso de clonación.",
+    viewVoices: "Ver voces clonadas",
   },
   en: {
     headerTitle: "Recovering my voice",
@@ -66,6 +67,7 @@ const translations = {
     cloning: "Cloning...",
     success: "Success! Voice cloning process started for",
     fail: "Failed to start cloning process.",
+    viewVoices: "See cloned voices",
   }
 };
 
@@ -74,6 +76,8 @@ function Index() {
   const [userName, setUserName] = useState("");
   const [lang, setLang] = useState<"es" | "en">("es");
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const t = translations[lang];
 
   return (
@@ -81,6 +85,8 @@ function Index() {
       <SiteHeader 
         lang={lang} 
         onToggleLang={() => setLang(prev => prev === "es" ? "en" : "es")} 
+        onToggleAdmin={() => setIsAdmin(prev => !prev)}
+        isAdmin={isAdmin}
         t={t}
       />
       <PanelShell>
@@ -100,6 +106,7 @@ function Index() {
             t={t}
             lang={lang}
             userName={userName}
+            isAdmin={isAdmin}
             onBack={() => setStep("name")} 
           />
         )}
