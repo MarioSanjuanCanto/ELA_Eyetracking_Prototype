@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { CalibrationScreen } from "@/components/CalibrationScreen";
 import { TrackingScreen } from "@/components/TrackingScreen";
@@ -7,6 +8,7 @@ import { useWebGazer } from "@/hooks/useWebGazer";
 type AppState = "welcome" | "calibrating" | "tracking";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [appState, setAppState] = useState<AppState>("welcome");
   const [usePictograms, setUsePictograms] = useState(false);
   const {
@@ -57,6 +59,7 @@ const Index = () => {
     return (
       <WelcomeScreen
         onStart={handleStart}
+        onExit={() => navigate("/")}
         usePictograms={usePictograms}
         onTogglePictograms={() => setUsePictograms(!usePictograms)}
       />

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Eye, Camera, MousePointer, ScanEye } from "lucide-react";
+import { Camera, ScanEye, LogOut } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -7,11 +7,12 @@ import { Image as ImageIcon } from "lucide-react";
 
 interface WelcomeScreenProps {
   onStart: () => void;
+  onExit: () => void;
   usePictograms: boolean;
   onTogglePictograms: () => void;
 }
 
-export const WelcomeScreen = ({ onStart, usePictograms, onTogglePictograms }: WelcomeScreenProps) => {
+export const WelcomeScreen = ({ onStart, onExit, usePictograms, onTogglePictograms }: WelcomeScreenProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F2F6FA] to-[#E3EBF5] grid-bg flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Decorative ambient blobs */}
@@ -89,6 +90,15 @@ export const WelcomeScreen = ({ onStart, usePictograms, onTogglePictograms }: We
             className="w-full h-14 rounded-2xl text-lg font-semibold shadow-lg shadow-blue-500/25 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 hover:shadow-blue-500/40 transition-all duration-300 group"
           >
             Start Calibration
+          </Button>
+          <Button
+            onClick={onExit}
+            variant="outline"
+            size="lg"
+            className="w-full h-12 rounded-2xl text-base font-semibold border-slate-300 text-slate-700 hover:bg-slate-100"
+          >
+            <LogOut className="w-4 h-4" />
+            Exit
           </Button>
           <p className="text-xs text-center text-slate-400 font-medium">
             Remember to be centered and have good lightning for a better performance
