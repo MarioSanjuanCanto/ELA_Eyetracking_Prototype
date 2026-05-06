@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { phrases, CATEGORY_MAP } from "@/lib/phrases";
 import { playClickSound } from "@/lib/sounds";
+import { testVoiceAction } from "@/lib/voice-actions";
 
 interface GazeGridProps {
   activeZone: { row: string; col: string } | null;
@@ -272,6 +273,14 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText, usePi
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [selectedKeyboardGroup, setSelectedKeyboardGroup] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (viewState === "confirmation" && selectedText) {
+      testVoiceAction({ text: selectedText }).catch(err => {
+        console.error("Error playing voice action:", err);
+      });
+    }
+  }, [viewState, selectedText]);
 
   const handleAction = (label: string) => {
     playClickSound();
