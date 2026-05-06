@@ -64,7 +64,7 @@ const VoiceOnboarding = () => {
   const [step, setStep] = useState<Step>("start");
   const [lang, setLang] = useState<"es" | "en">("es");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [, setUserName] = useState("");
+  const [userName, setUserName] = useState("");
 
   const t = translations[lang];
 
@@ -93,6 +93,7 @@ const VoiceOnboarding = () => {
           <RecordScreen
             t={t}
             lang={lang}
+            userName={userName}
             isAdmin={isAdmin}
             onBack={() => setStep("name")}
             onContinue={() => navigate("/eyetracking")}

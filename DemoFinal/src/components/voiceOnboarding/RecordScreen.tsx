@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Mic, Play, Pause, Trash2, Upload, Square, ArrowRight } from "lucide-react";
+import { ArrowLeft, Mic, Play, Pause, Trash2, Upload, Square, ArrowRight, RotateCw } from "lucide-react";
+import { cloneVoiceAction, getClonedVoicesAction } from "@/lib/voice-actions";
 
 type AudioFile = {
   name: string;
@@ -16,6 +17,11 @@ type OnboardingTexts = {
   minSecs: string;
   back: string;
   continue: string;
+  startCloning?: string;
+  cloning?: string;
+  viewVoices?: string;
+  success?: string;
+  fail?: string;
 };
 
 const getSupportedMimeType = () => {
@@ -49,12 +55,13 @@ const getAudioDuration = (file: File): Promise<number> =>
 type RecordScreenProps = {
   t: OnboardingTexts;
   lang: "es" | "en";
+  userName: string;
   isAdmin?: boolean;
   onBack: () => void;
   onContinue: () => void;
 };
 
-export function RecordScreen({ t, lang, isAdmin = false, onBack, onContinue }: RecordScreenProps) {
+export function RecordScreen({ t, lang, userName, isAdmin = false, onBack, onContinue }: RecordScreenProps) {
   const [audios, setAudios] = useState<AudioFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const recordingStartTimeRef = useRef<number | null>(null);
@@ -65,6 +72,54 @@ export function RecordScreen({ t, lang, isAdmin = false, onBack, onContinue }: R
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const playbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isCloning, setIsCloning] = useState(false);
+
+  const startCloningLabel = t.startCloning ?? (lang === "es" ? "Empezar clonacion" : "Start cloning");
+  const cloningLabel = t.cloning ?? (lang === "es" ? "Clonando..." : "Cloning...");
+  const viewVoicesLabel = t.viewVoices ?? (lang === "es" ? "Ver voces" : "View voices");
+  const successLabel = t.success ?? (lang === "es" ? "Voz clonada correctamente para" : "Voice cloned successfully for");
+  const failLabel = t.fail ?? (lang === "es" ? "Error al clonar la voz" : "Voice cloning failed");
+
+  const handleStartCloning = async () => {
+    if (!audios.length) return;
+
+    setIsCloning(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", userName || `voice-${Date.now()}`);
+      audios.forEach((audio) => {
+        formData.append("files", audio.file, audio.name);
+      });
+
+      await cloneVoiceAction({ data: formData });
+      alert(`${successLabel} ${userName}.`);
+    } catch (error) {
+      console.error("Error cloning voice:", error);
+      alert(failLabel);
+    } finally {
+      setIsCloning(false);
+    }
+  };
+
+  const handleGetVoices = async () => {
+    try {
+      const voices = await getClonedVoicesAction();
+      const clonedVoices = voices.filter(
+        (voice) => voice.category === "cloned" || voice.category === "professional" || (voice.samples?.length ?? 0) > 0,
+      );
+      console.log("Cloned voices:", clonedVoices);
+      alert(
+        clonedVoices.length
+          ? `${lang === "es" ? "Voces encontradas" : "Voices found"}: ${clonedVoices.map((voice) => voice.name).join(", ")}`
+          : lang === "es"
+            ? "No se encontraron voces clonadas."
+            : "No cloned voices found.",
+      );
+    } catch (error) {
+      console.error("Error getting voices:", error);
+      alert(lang === "es" ? "No se pudieron cargar las voces." : "Could not load voices.");
+    }
+  };
 
   const handleMicClick = async () => {
     if (isRecording) {
@@ -268,6 +323,29 @@ export function RecordScreen({ t, lang, isAdmin = false, onBack, onContinue }: R
           className="flex items-center gap-3 rounded-full border border-border bg-background px-10 py-4 text-lg font-semibold text-foreground shadow-sm transition hover:bg-muted"
         >
           <ArrowLeft className="h-5 w-5" /> {t.back}
+        </button>
+        {isAdmin && (
+          <button
+            onClick={handleGetVoices}
+            className="flex items-center gap-2 rounded-full border border-border bg-background/50 px-6 py-4 text-base font-semibold text-foreground/80 shadow-sm transition hover:bg-muted hover:text-foreground"
+          >
+            {viewVoicesLabel}
+          </button>
+        )}
+        <button
+          disabled={totalSeconds < 10 || isCloning}
+          onClick={handleStartCloning}
+          className="flex items-center gap-2 rounded-full px-10 py-4 text-lg font-semibold text-foreground shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ background: "linear-gradient(90deg, var(--cta-from), var(--cta-to))" }}
+        >
+          {isCloning ? (
+            <>
+              <RotateCw className="h-5 w-5 animate-spin" />
+              {cloningLabel}
+            </>
+          ) : (
+            startCloningLabel
+          )}
         </button>
         {isAdmin && (
           <button
