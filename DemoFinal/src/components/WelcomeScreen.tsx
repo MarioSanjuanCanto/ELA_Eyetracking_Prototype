@@ -35,7 +35,7 @@ const TRANSLATIONS = {
     subtitle: "Controla el teclado con tu mirada",
     webcam: "Acceso a la Cámara",
     calibration: "Calibración Inteligente",
-    calibrationDesc: "Cuadrícula de precisión de 9 puntos",
+    calibrationDesc: "Cuadrícula de precisión de 6 puntos",
     pictograms: "Pictogramas",
     visualMode: "Modo Visual",
     start: "Iniciar Calibración",
@@ -79,7 +79,7 @@ export const WelcomeScreen = ({ onStart, onExit, usePictograms, onTogglePictogra
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={toggleLang}
             className="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
           >
