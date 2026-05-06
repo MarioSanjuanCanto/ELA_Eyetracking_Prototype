@@ -105,25 +105,7 @@ export function RecordScreen({ t, lang, userName, isAdmin = false, onBack, onCon
     }
   };
 
-  const handleGetVoices = async () => {
-    try {
-      const voices = await getClonedVoicesAction();
-      const clonedVoices = voices.filter(
-        (voice) => voice.category === "cloned" || voice.category === "professional" || (voice.samples?.length ?? 0) > 0,
-      );
-      console.log("Cloned voices:", clonedVoices);
-      alert(
-        clonedVoices.length
-          ? `${lang === "es" ? "Voces encontradas" : "Voices found"}: ${clonedVoices.map((voice) => voice.name).join(", ")}`
-          : lang === "es"
-            ? "No se encontraron voces clonadas."
-            : "No cloned voices found.",
-      );
-    } catch (error) {
-      console.error("Error getting voices:", error);
-      alert(lang === "es" ? "No se pudieron cargar las voces." : "Could not load voices.");
-    }
-  };
+
 
   const handleMicClick = async () => {
     if (isRecording) {
@@ -328,14 +310,7 @@ export function RecordScreen({ t, lang, userName, isAdmin = false, onBack, onCon
         >
           <ArrowLeft className="h-5 w-5" /> {t.back}
         </button>
-        {isAdmin && (
-          <button
-            onClick={handleGetVoices}
-            className="flex items-center gap-2 rounded-full border border-border bg-background/50 px-6 py-4 text-base font-semibold text-foreground/80 shadow-sm transition hover:bg-muted hover:text-foreground"
-          >
-            {viewVoicesLabel}
-          </button>
-        )}
+
         <button
           disabled={totalSeconds < 10 || isCloning}
           onClick={handleStartCloning}

@@ -82,6 +82,7 @@ const VoiceOnboarding = () => {
         {step === "name" && (
           <NameScreen
             t={t}
+            isAdmin={isAdmin}
             onContinue={(name) => {
               setUserName(name);
               setStep("record");
