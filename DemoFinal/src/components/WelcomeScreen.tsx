@@ -25,7 +25,7 @@ export const WelcomeScreen = ({ onStart, usePictograms, onTogglePictograms }: We
           <div className="relative group cursor-default">
             <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             <img
-              src="/valgraiLogo.png"
+              src="/valgrai.png"
               alt="Valgrai Logo"
               className="w-64 md:w-80 h-auto object-contain drop-shadow-sm hover:scale-105 transition-transform duration-500 relative z-10"
             />
@@ -98,13 +98,13 @@ export const WelcomeScreen = ({ onStart, usePictograms, onTogglePictograms }: We
         {/* Footer Logos */}
         <div className="flex items-center gap-8 pt-4 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500">
           <img
-            src="/VRAIN_Logo.png"
+            src="/vrain.png"
             alt="VRAIN Logo"
             className="h-8 md:h-10 w-auto object-contain"
           />
           <div className="h-6 w-px bg-slate-300" />
           <img
-            src="/vertexlit_logo.png"
+            src="/vertexlit.png"
             alt="VertexLit Logo"
             className="h-8 md:h-10 w-auto object-contain"
           />

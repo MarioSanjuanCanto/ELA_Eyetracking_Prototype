@@ -93,6 +93,7 @@ export function RecordScreen({ t, lang, userName, isAdmin = false, onBack, onCon
 
       await cloneVoiceAction({ data: formData });
       alert(`${successLabel} ${userName}.`);
+      onContinue();
     } catch (error) {
       console.error("Error cloning voice:", error);
       alert(failLabel);
@@ -350,19 +351,12 @@ export function RecordScreen({ t, lang, userName, isAdmin = false, onBack, onCon
         {isAdmin && (
           <button
             onClick={onContinue}
-            className="flex items-center gap-2 rounded-full border border-border bg-background/50 px-8 py-4 text-base font-semibold text-foreground/80 shadow-sm transition hover:bg-muted hover:text-foreground"
+            className="flex items-center gap-2 rounded-full px-10 py-4 text-lg font-semibold text-foreground shadow-lg transition hover:opacity-90"
+            style={{ background: "linear-gradient(90deg, var(--cta-from), var(--cta-to))" }}
           >
-            Ir a eyetracking
+            {t.continue} <ArrowRight className="h-5 w-5" />
           </button>
         )}
-        <button
-          disabled={totalSeconds < 10}
-          onClick={onContinue}
-          className="flex items-center gap-2 rounded-full px-10 py-4 text-lg font-semibold text-foreground shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ background: "linear-gradient(90deg, var(--cta-from), var(--cta-to))" }}
-        >
-          {t.continue} <ArrowRight className="h-5 w-5" />
-        </button>
       </div>
     </div>
   );
