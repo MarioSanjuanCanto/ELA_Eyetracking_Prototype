@@ -91,7 +91,10 @@ export function RecordScreen({ t, lang, userName, isAdmin = false, onBack, onCon
         formData.append("files", audio.file, audio.name);
       });
 
-      await cloneVoiceAction({ data: formData });
+      const response = await cloneVoiceAction({ data: formData });
+      if (response && response.voice_id) {
+        localStorage.setItem("clonedVoiceId", response.voice_id);
+      }
       alert(`${successLabel} ${userName}.`);
       onContinue();
     } catch (error) {
