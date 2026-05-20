@@ -160,10 +160,14 @@ export const WelcomeScreen = ({ onStart, onExit, usePictograms, onTogglePictogra
 
           <div className="text-center space-y-2">
             <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-slate-900 tracking-tight">
-              {t.title}
+              {showAdminPanel 
+                ? (lang === "es" ? "Prueba de Voz Clonada" : "Cloned Voice Testing")
+                : t.title}
             </h1>
             <p className="text-slate-500 font-medium">
-              {t.subtitle}
+              {showAdminPanel 
+                ? (lang === "es" ? "Ajusta los parámetros y reproduce cualquier texto" : "Adjust settings and synthesize any custom phrase")
+                : t.subtitle}
             </p>
           </div>
         </div>
@@ -171,68 +175,70 @@ export const WelcomeScreen = ({ onStart, onExit, usePictograms, onTogglePictogra
         {/* Dynamic flex container for main options and admin dashboard */}
         <div className="w-full flex flex-col md:flex-row gap-8 justify-center items-stretch">
           {/* Action Card */}
-          <div className="w-full max-w-md bg-white/60 backdrop-blur-xl border border-white/50 rounded-3xl p-8 shadow-xl shadow-slate-200/50 flex flex-col justify-between space-y-8">
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/50 transition-colors duration-300 group">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center border border-blue-100/50 group-hover:scale-110 transition-transform duration-300">
-                  <Camera className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800">{t.webcam}</h3>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/50 transition-colors duration-300 group">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center border border-blue-100/50 group-hover:scale-110 transition-transform duration-300">
-                  <ScanEye className="w-6 h-6 text-cyan-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800">{t.calibration}</h3>
-                  <p className="text-sm text-slate-500">{t.calibrationDesc}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50/50 border border-slate-100 transition-colors duration-300">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-100 shadow-sm">
-                    <ImageIcon className="w-5 h-5 text-slate-600" />
+          {!showAdminPanel && (
+            <div className="w-full max-w-md bg-white/60 backdrop-blur-xl border border-white/50 rounded-3xl p-8 shadow-xl shadow-slate-200/50 flex flex-col justify-between space-y-8 animate-in fade-in slide-in-from-left-8 duration-500">
+              {/* Features Grid */}
+              <div className="grid grid-cols-1 gap-4">
+                <div className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/50 transition-colors duration-300 group">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center border border-blue-100/50 group-hover:scale-110 transition-transform duration-300">
+                    <Camera className="w-6 h-6 text-blue-600" />
                   </div>
-                  <div className="flex flex-col">
-                    <Label htmlFor="pictograms-mode" className="font-semibold text-slate-800 cursor-pointer">{t.pictograms}</Label>
-                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{t.visualMode}</span>
+                  <div>
+                    <h3 className="font-semibold text-slate-800">{t.webcam}</h3>
                   </div>
                 </div>
-                <Switch
-                  id="pictograms-mode"
-                  checked={usePictograms}
-                  onCheckedChange={onTogglePictograms}
-                />
+
+                <div className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/50 transition-colors duration-300 group">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center border border-blue-100/50 group-hover:scale-110 transition-transform duration-300">
+                    <ScanEye className="w-6 h-6 text-cyan-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800">{t.calibration}</h3>
+                    <p className="text-sm text-slate-500">{t.calibrationDesc}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50/50 border border-slate-100 transition-colors duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                      <ImageIcon className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <div className="flex flex-col">
+                      <Label htmlFor="pictograms-mode" className="font-semibold text-slate-800 cursor-pointer">{t.pictograms}</Label>
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{t.visualMode}</span>
+                    </div>
+                  </div>
+                  <Switch
+                    id="pictograms-mode"
+                    checked={usePictograms}
+                    onCheckedChange={onTogglePictograms}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4">
+                <Button
+                  onClick={onStart}
+                  size="lg"
+                  className="w-full h-14 rounded-2xl text-lg font-semibold shadow-lg shadow-blue-500/25 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 hover:shadow-blue-500/40 transition-all duration-300 group"
+                >
+                  {t.start}
+                </Button>
+                <Button
+                  onClick={onExit}
+                  variant="outline"
+                  size="lg"
+                  className="w-full h-12 rounded-2xl text-base font-semibold border-slate-300 text-slate-700 hover:bg-slate-100"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {t.exit}
+                </Button>
+                <p className="text-xs text-center text-slate-400 font-medium pt-2">
+                  {t.disclaimer}
+                </p>
               </div>
             </div>
-
-            <div className="space-y-4 pt-4">
-              <Button
-                onClick={onStart}
-                size="lg"
-                className="w-full h-14 rounded-2xl text-lg font-semibold shadow-lg shadow-blue-500/25 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 hover:shadow-blue-500/40 transition-all duration-300 group"
-              >
-                {t.start}
-              </Button>
-              <Button
-                onClick={onExit}
-                variant="outline"
-                size="lg"
-                className="w-full h-12 rounded-2xl text-base font-semibold border-slate-300 text-slate-700 hover:bg-slate-100"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                {t.exit}
-              </Button>
-              <p className="text-xs text-center text-slate-400 font-medium pt-2">
-                {t.disclaimer}
-              </p>
-            </div>
-          </div>
+          )}
 
           {/* Admin voice testing panel */}
           {showAdminPanel && (
