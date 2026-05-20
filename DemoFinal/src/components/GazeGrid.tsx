@@ -276,7 +276,12 @@ export const GazeGrid = ({ activeZone, onExit, onSelectText, selectedText, usePi
 
   useEffect(() => {
     if (viewState === "confirmation" && selectedText) {
-      testVoiceAction({ text: selectedText }).catch(err => {
+      const voiceId = localStorage.getItem("clonedVoiceId");
+      if (!voiceId) {
+        console.warn("No cloned voice ID found in localStorage. Cannot play voice.");
+        return;
+      }
+      testVoiceAction({ text: selectedText, voiceId }).catch(err => {
         console.error("Error playing voice action:", err);
       });
     }
