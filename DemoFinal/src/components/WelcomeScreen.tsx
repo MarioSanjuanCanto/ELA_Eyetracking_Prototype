@@ -161,13 +161,13 @@ export const WelcomeScreen = ({ onStart, onExit, usePictograms, onTogglePictogra
           <div className="text-center space-y-2">
             <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-slate-900 tracking-tight">
               {showAdminPanel 
-                ? (lang === "es" ? "Prueba de Voz Clonada" : "Cloned Voice Testing")
-                : t.title}
+                ? t.title
+                : (lang === "es" ? "Prueba de Voz Clonada" : "Cloned Voice Testing")}
             </h1>
             <p className="text-slate-500 font-medium">
               {showAdminPanel 
-                ? (lang === "es" ? "Ajusta los parámetros y reproduce cualquier texto" : "Adjust settings and synthesize any custom phrase")
-                : t.subtitle}
+                ? t.subtitle
+                : (lang === "es" ? "Ajusta los parámetros y reproduce cualquier texto" : "Adjust settings and synthesize any custom phrase")}
             </p>
           </div>
         </div>
@@ -175,7 +175,7 @@ export const WelcomeScreen = ({ onStart, onExit, usePictograms, onTogglePictogra
         {/* Dynamic flex container for main options and admin dashboard */}
         <div className="w-full flex flex-col md:flex-row gap-8 justify-center items-stretch">
           {/* Action Card */}
-          {!showAdminPanel && (
+          {showAdminPanel && (
             <div className="w-full max-w-md bg-white/60 backdrop-blur-xl border border-white/50 rounded-3xl p-8 shadow-xl shadow-slate-200/50 flex flex-col justify-between space-y-8 animate-in fade-in slide-in-from-left-8 duration-500">
               {/* Features Grid */}
               <div className="grid grid-cols-1 gap-4">
@@ -241,7 +241,7 @@ export const WelcomeScreen = ({ onStart, onExit, usePictograms, onTogglePictogra
           )}
 
           {/* Admin voice testing panel */}
-          {showAdminPanel && (
+          {!showAdminPanel && (
             <div className="w-full max-w-md bg-white/85 backdrop-blur-2xl border border-blue-200/40 rounded-3xl p-8 shadow-2xl shadow-blue-900/5 flex flex-col justify-between space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
               <div className="space-y-4">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
